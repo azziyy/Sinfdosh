@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sinfdoshlar Hub</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { --primary: #4a90e2; --bg: #f2f5f8; --white: #ffffff; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); overflow-x: hidden; padding-bottom: 75px; }
+
+        /* Toolbar & Sidebar */
+        .toolbar {
+            background: var(--primary); color: white; padding: 12px 18px;
+            position: sticky; top: 0; z-index: 1000; display: flex;
+            justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .toolbar h2 { font-size: 18px; margin: 0; font-weight: 600; }
+
+        /* Sidebar (Drawer) */
+        .drawer {
+            position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
+            background: var(--white); z-index: 3000; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+        }
+        .drawer.active { left: 0; }
+        .drawer-header { background: var(--primary); color: white; padding: 30px 20px; text-align: center; }
+        .drawer-header i { font-size: 50px; margin-bottom: 10px; }
+        .drawer-menu { padding: 15px 0; }
+        .drawer-item { 
+            padding: 15px 25px; display: flex; align-items: center; gap: 15px;
+            color: #333; text-decoration: none; transition: 0.3s; cursor: pointer;
+        }
+        .drawer-item:hover { background: #f0f7ff; color: var(--primary); }
+        .overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.5); z-index: 2500; display: none; 
+        }
+
+        /* Animations */
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .spin-anim { animation: spin 0.8s ease-in-out; }
+        
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .list-card { animation: fadeInUp 0.5s ease backwards; }
+
+        /* Main Styles */
+        .osh-filter {
+            display: none; background: #fff; padding: 12px;
+            justify-content: center; gap: 12px; border-bottom: 1px solid #eee;
+        }
+        .year-btn {
+            padding: 6px 20px; border-radius: 20px; border: 1.5px solid #d1d8e0;
+            color: #7f8c8d; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.3s;
+        }
+        .year-btn.active { background: var(--primary); color: white; border-color: var(--primary); transform: scale(1.05); }
+
+        .container { padding: 12px; max-width: 550px; margin: auto; }
+        
+        .list-card {
+            background: white; border-radius: 15px; padding: 15px; margin-bottom: 12px;
+            display: flex; align-items: center; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: 0.3s;
+        }
+        .list-card:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.1); }
+
+        .icon-box {
+            width: 48px; height: 48px; border-radius: 12px;
+            background: #f0f7ff; display: flex; align-items: center;
+            justify-content: center; margin-right: 15px; color: var(--primary); font-size: 20px;
+        }
+
+        /* Modal & Tafsilotlar (Text Formatting) */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 4000; align-items: flex-end;
+        }
+        .modal-content {
+            background: white; width: 100%; border-radius: 25px 25px 0 0;
+            padding: 25px; box-sizing: border-box; transform: translateY(100%);
+            transition: 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+        .modal.active .modal-content { transform: translateY(0); }
+
+        /* Tafsilotlardagi gaplarni qatorga tushirish */
+        .desc-text { 
+            white-space: pre-line; line-height: 1.8; color: #444; 
+            font-size: 15px; background: #f8f9fa; padding: 15px; border-radius: 12px;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed; bottom: 0; width: 100%; background: white;
+            display: flex; justify-content: space-around; padding: 10px 0;
+            box-shadow: 0 -2px 15px rgba(0,0,0,0.08); border-top: 1px solid #eee; z-index: 1000;
+        }
+        .nav-item { text-align: center; color: #bdc3c7; cursor: pointer; flex: 1; font-size: 11px; transition: 0.3s; }
+        .nav-item.active { color: var(--primary); transform: translateY(-3px); }
+        .nav-item i { font-size: 22px; display: block; margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+
+    <div class="overlay" id="overlay" onclick="toggleDrawer()"></div>
+    <div class="drawer" id="drawer">
+        <div class="drawer-header">
+            <i class="fas fa-user-circle"></i>
+            <h3>Sinfdoshlar Hub</h3>
+            <p>Menu va Sozlamalar</p>
+        </div>
+        <div class="drawer-menu">
+            <div class="drawer-item"><i class="fas fa-images"></i> Galereya</div>
+            <div class="drawer-item"><i class="fas fa-address-book"></i> Kontaktlar</div>
+            <div class="drawer-item"><i class="fas fa-link"></i> Foydali Linklar</div>
+            <div class="drawer-item" onclick="location.reload()"><i class="fas fa-info-circle"></i> Ilova haqida</div>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <i class="fas fa-bars" onclick="toggleDrawer()"></i>
+        <h2 id="page-title">Osh Navbatlari</h2>
+        <i class="fas fa-sync-alt" id="refresh-icon" onclick="fetchData()"></i>
+    </div>
+
+    <div id="filter-bar" class="osh-filter" style="display: flex;">
+        <div class="year-btn active" onclick="changeYear('2025', this)">2025</div>
+        <div class="year-btn" onclick="changeYear('2026', this)">2026</div>
+    </div>
+
+    <div class="container" id="list-container"></div>
+
+    <div id="modal" class="modal" onclick="if(event.target == this) closeModal()">
+        <div class="modal-content">
+            <div id="modal-body"></div>
+            <button onclick="closeModal()" style="width:100%; padding:15px; margin-top:20px; border:none; border-radius:12px; background:#f0f2f5; font-weight:700; cursor:pointer;">Yopish</button>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="changeTab('T1', 'Osh Navbatlari', this)">
+            <i class="fas fa-utensils"></i><span>Osh</span>
+        </div>
+        <div class="nav-item" onclick="changeTab('T3', 'Alg\'ov', this)">
+            <i class="fas fa-mountain"></i><span>Alg'ov</span>
+        </div>
+        <div class="nav-item" onclick="changeTab('T2', 'To\'yona Ro\'yxati', this)">
+            <i class="fas fa-gift"></i><span>To'yona</span>
+        </div>
+    </div>
+
+    <script>
+        const SHEET_ID = '1myLNznyPr7Clnsnpg0yRFmZCGd-nox4H-SJyEiu1Ul0';
+        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+        
+        let rawData = [];
+        let activeTab = 'T1';
+        let activeYear = '2025';
+
+        // Sidebar funksiyasi
+        function toggleDrawer() {
+            const d = document.getElementById('drawer');
+            const o = document.getElementById('overlay');
+            d.classList.toggle('active');
+            o.style.display = d.classList.contains('active') ? 'block' : 'none';
+        }
+
+        async function fetchData() {
+            const icon = document.getElementById('refresh-icon');
+            icon.classList.add('spin-anim');
+            setTimeout(() => icon.classList.remove('spin-anim'), 800);
+
+            try {
+                const res = await fetch(url);
+                const text = await res.text();
+                const json = JSON.parse(text.substring(47).slice(0, -2));
+                rawData = json.table.rows;
+                render();
+            } catch (e) { alert("Xatolik yuz berdi"); }
+        }
+
+        function render() {
+            const container = document.getElementById('list-container');
+            container.innerHTML = '';
+            
+            rawData.forEach((row, index) => {
+                if (!row.c[0]) return;
+                const id = String(row.c[0]?.v || '');
+                const oy = String(row.c[4]?.v || '');
+                const yil = String(row.c[5]?.v || '');
+                const show = (activeTab === 'T1') ? (id.startsWith('T1') && yil === activeYear) : id.startsWith(activeTab);
+
+                if (show) {
+                    const item = {
+                        title: row.c[2]?.v || '',
+                        desc: row.c[3]?.v || '',
+                        date: oy + (yil ? " " + yil : ""),
+                        status: row.c[6]?.v || '',
+                        icon: row.c[7]?.v || 'star'
+                    };
+
+                    const div = document.createElement('div');
+                    div.className = 'list-card';
+                    div.style.animationDelay = (index * 0.05) + 's';
+                    div.onclick = () => openModal(item);
+                    div.innerHTML = `
+                        <div class="icon-box"><i class="fas fa-${item.icon}"></i></div>
+                        <div class="info">
+                            <h4 style="margin:0;">${item.title}</h4>
+                            <p style="margin:5px 0 0; font-size:12px; color:#888;">${item.date} <span style="background:#eee; padding:2px 6px; border-radius:4px; font-size:10px;">${item.status}</span></p>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                }
+            });
+        }
+
+        function openModal(item) {
+            // Matndagi vergul yoki nuqtalardan keyin yangi qatorga tushirish (formatlash)
+            let formattedDesc = item.desc.replace(/(\d+\.)/g, '<br>$1'); // 1. 2. raqamlaridan oldin yangi qator
+
+            document.getElementById('modal-body').innerHTML = `
+                <h2 style="margin-top:0;">${item.title}</h2>
+                <p style="color:var(--primary); font-weight:bold;"><i class="far fa-calendar-alt"></i> ${item.date}</p>
+                <div class="desc-text">${formattedDesc}</div>
+                <div style="margin-top:15px;"><span style="background:var(--primary); color:white; padding:4px 10px; border-radius:6px; font-size:12px;">${item.status}</span></div>
+            `;
+            const m = document.getElementById('modal');
+            m.style.display = 'flex';
+            setTimeout(() => m.classList.add('active'), 10);
+        }
+
+        function closeModal() {
+            const m = document.getElementById('modal');
+            m.classList.remove('active');
+            setTimeout(() => m.style.display = 'none', 400);
+        }
+
+        function changeTab(tab, title, el) {
+            activeTab = tab;
+            document.getElementById('page-title').innerText = title;
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('filter-bar').style.display = (tab === 'T1') ? 'flex' : 'none';
+            render();
+        }
+
+        function changeYear(y, el) {
+            activeYear = y;
+            document.querySelectorAll('.year-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            render();
+        }
+
+        fetchData();
+    </script>
+</body>
+</html>
