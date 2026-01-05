@@ -105,6 +105,19 @@
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .spin-anim { animation: spin 0.8s ease-in-out; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Barcha elementlar uchun ko'k ramkani butunlay yo'qotish */
+    * {
+        -webkit-tap-highlight-color: transparent; /* Mobil (Android/iOS) uchun */
+        outline: none !important;                /* Kompyuter brauzerlari uchun */
+        -webkit-focus-ring-color: transparent;    /* Chrome/Safari uchun qo'shimcha */
+    }
+
+    /* Maxsus holat: Tugma bosilganda ham chiqmasligi uchun */
+    button:focus, div:focus, i:focus, a:focus {
+        outline: none !important;
+        box-shadow: none !important;
+    }
     </style>
 </head>
 <body>
