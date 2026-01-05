@@ -6,26 +6,10 @@
     <title>Sinfdoshlar Hub</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root { --primary: #4a90e2; --bg: #f2f5f8; --white: #ffffff; }
+        :root { --primary: #4a90e2; --bg: #f2f5f8; --white: #ffffff; --text: #2c3e50; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); overflow-x: hidden; padding-bottom: 85px; }
 
-        /* 1. KO'K RAMKA VA HIGHLIGHTNI YO'QOTISH (CSS) */
-        * { 
-            margin: 0; padding: 0; box-sizing: border-box; 
-            font-family: 'Segoe UI', sans-serif;
-            -webkit-tap-highlight-color: transparent !important; /* Mobil ko'k effektni yo'qotish */
-            outline: none !important; /* Barcha ramkalarni yo'qotish */
-            -webkit-focus-ring-color: transparent !important;
-        }
-
-        /* Tugma va bosiladigan elementlar fokusi uchun alohida */
-        *:focus {
-            outline: none !important;
-            box-shadow: none !important;
-        }
-
-        body { background: var(--bg); overflow-x: hidden; padding-bottom: 75px; }
-
-        /* Toolbar & Sidebar */
+        /* --- TOOLBAR --- */
         .toolbar {
             background: var(--primary); color: white; padding: 12px 18px;
             position: sticky; top: 0; z-index: 1000; display: flex;
@@ -33,81 +17,91 @@
         }
         .toolbar h2 { font-size: 18px; margin: 0; font-weight: 600; }
 
-        /* Sidebar (Drawer) */
+        /* --- DRAWER (SIDEBAR) ANIMATSIYASI --- */
         .drawer {
-            position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
-            background: var(--white); z-index: 3000; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+            position: fixed; top: 0; left: -310px; width: 290px; height: 100%;
+            background: var(--white); z-index: 3000; 
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 10px 0 30px rgba(0,0,0,0.2);
+            border-radius: 0 25px 25px 0;
         }
         .drawer.active { left: 0; }
-        .drawer-header { background: var(--primary); color: white; padding: 30px 20px; text-align: center; }
-        .drawer-header i { font-size: 50px; margin-bottom: 10px; }
-        .drawer-menu { padding: 15px 0; }
-        .drawer-item { 
-            padding: 15px 25px; display: flex; align-items: center; gap: 15px;
-            color: #333; text-decoration: none; transition: 0.3s; cursor: pointer;
+        .drawer-header { 
+            background: linear-gradient(45deg, var(--primary), #357abd); 
+            color: white; padding: 45px 20px; text-align: center;
+            border-radius: 0 25px 0 0;
         }
-        .drawer-item:hover { background: #f0f7ff; color: var(--primary); }
+        .drawer-header i { font-size: 55px; margin-bottom: 10px; animation: bounce 2s infinite; display: block; }
+        
+        .drawer-menu { padding: 20px 0; }
+        .drawer-item { 
+            padding: 15px 25px; display: flex; align-items: center; gap: 15px; 
+            color: #333; text-decoration: none; cursor: pointer;
+            transition: 0.3s; opacity: 0; transform: translateX(-20px);
+        }
+        .drawer.active .drawer-item { opacity: 1; transform: translateX(0); }
+        .drawer-item:nth-child(1) { transition-delay: 0.2s; }
+        .drawer-item:nth-child(2) { transition-delay: 0.3s; }
+        .drawer-item:nth-child(3) { transition-delay: 0.4s; }
+        .drawer-item:hover { background: #f0f7ff; color: var(--primary); padding-left: 35px; }
+
         .overlay { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.5); z-index: 2500; display: none; 
+            background: rgba(0,0,0,0.4); z-index: 2500; display: none;
+            backdrop-filter: blur(4px); transition: 0.4s;
         }
 
-        /* Osh Filter */
-        .osh-filter {
-            display: none; background: #fff; padding: 12px;
-            justify-content: center; gap: 12px; border-bottom: 1px solid #eee;
-        }
-        .year-btn {
-            padding: 6px 20px; border-radius: 20px; border: 1.5px solid #d1d8e0;
-            color: #7f8c8d; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.3s;
-        }
+        /* --- FILTR BAR --- */
+        .osh-filter { display: none; background: #fff; padding: 12px; justify-content: center; gap: 12px; border-bottom: 1px solid #eee; }
+        .year-btn { padding: 6px 22px; border-radius: 20px; border: 1.5px solid #d1d8e0; color: #7f8c8d; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.3s; }
         .year-btn.active { background: var(--primary); color: white; border-color: var(--primary); transform: scale(1.05); }
 
+        /* --- LISTVIEW (RASMLAR BILAN) --- */
         .container { padding: 12px; max-width: 550px; margin: auto; }
-        
         .list-card {
-            background: white; border-radius: 15px; padding: 15px; margin-bottom: 12px;
+            background: white; border-radius: 20px; padding: 12px 18px; margin-bottom: 15px;
             display: flex; align-items: center; cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: 0.3s;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.04); transition: 0.3s;
             animation: fadeInUp 0.5s ease backwards;
         }
-        .list-card:active { transform: scale(0.98); background: #f9f9f9; }
+        .list-card:active { transform: scale(0.96); }
 
-        .icon-box {
-            width: 48px; height: 48px; border-radius: 12px;
-            background: #f0f7ff; display: flex; align-items: center;
-            justify-content: center; margin-right: 15px; color: var(--primary); font-size: 20px;
+        .list-img-box {
+            width: 65px; height: 65px; border-radius: 50%; 
+            overflow: hidden; margin-right: 18px; border: 2px solid #f0f3f7; flex-shrink: 0;
         }
+        .list-img-box img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Modal */
-        .modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 4000; align-items: flex-end;
-        }
+        .info h4 { margin: 0; font-size: 17px; color: var(--text); }
+        .info p { margin: 5px 0 0; font-size: 12px; color: #888; }
+
+        /* --- MODAL (KATTA FLOATING RASM BILAN) --- */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 4000; align-items: flex-end; }
         .modal-content {
-            background: white; width: 100%; border-radius: 25px 25px 0 0;
+            background: white; width: 100%; border-radius: 35px 35px 0 0;
             padding: 25px; box-sizing: border-box; transform: translateY(100%);
-            transition: 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            transition: 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.1);
+            max-height: 85vh; display: flex; flex-direction: column; position: relative;
         }
         .modal.active .modal-content { transform: translateY(0); }
 
-        .desc-text { 
-            white-space: pre-line; line-height: 1.8; color: #444; 
-            font-size: 15px; background: #f8f9fa; padding: 15px; border-radius: 12px;
+        .modal-img-floating {
+            width: 130px; height: 130px; border-radius: 50%; border: 6px solid white;
+            position: absolute; top: -65px; left: 50%; transform: translateX(-50%);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.2); background: white; object-fit: cover; z-index: 4001;
         }
 
-        /* Bottom Nav */
-        .bottom-nav {
-            position: fixed; bottom: 0; width: 100%; background: white;
-            display: flex; justify-content: space-around; padding: 10px 0;
-            box-shadow: 0 -2px 15px rgba(0,0,0,0.08); border-top: 1px solid #eee; z-index: 1000;
-        }
+        .modal-scroll { overflow-y: auto; flex-grow: 1; margin-top: 65px; padding-bottom: 15px; }
+        .desc-text { white-space: pre-line; line-height: 1.8; color: #444; font-size: 15px; background: #f8f9fa; padding: 20px; border-radius: 20px; border: 1px solid #eee; text-align: left; }
+
+        /* --- BOTTOM NAV --- */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px 0; box-shadow: 0 -4px 20px rgba(0,0,0,0.08); border-top: 1px solid #eee; }
         .nav-item { text-align: center; color: #bdc3c7; cursor: pointer; flex: 1; font-size: 11px; transition: 0.3s; }
         .nav-item.active { color: var(--primary); transform: translateY(-3px); }
         .nav-item i { font-size: 22px; display: block; margin-bottom: 4px; }
 
-        /* Animations */
+        /* --- ANIMATSIYALAR --- */
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .spin-anim { animation: spin 0.8s ease-in-out; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -116,25 +110,19 @@
 <body>
 
     <div class="overlay" id="overlay" onclick="toggleDrawer()"></div>
-    
     <div class="drawer" id="drawer">
-        <div class="drawer-header">
-            <i class="fas fa-user-circle"></i>
-            <h3>Sinfdoshlar Hub</h3>
-            <p>Menu va Sozlamalar</p>
-        </div>
+        <div class="drawer-header"><i class="fa-solid fa-user-group"></i><h3>Sinfdoshlar</h3><p>Version 2.0</p></div>
         <div class="drawer-menu">
             <div class="drawer-item"><i class="fas fa-images"></i> Galereya</div>
             <div class="drawer-item"><i class="fas fa-address-book"></i> Kontaktlar</div>
-            <div class="drawer-item"><i class="fas fa-link"></i> Foydali Linklar</div>
-            <div class="drawer-item" onclick="location.reload()"><i class="fas fa-info-circle"></i> Ilova haqida</div>
+            <div class="drawer-item" onclick="location.reload()"><i class="fas fa-sync-alt"></i> Yangilash</div>
         </div>
     </div>
 
     <div class="toolbar">
-        <i class="fas fa-bars" onclick="toggleDrawer()"></i>
+        <i class="fas fa-bars" onclick="toggleDrawer()" style="cursor:pointer"></i>
         <h2 id="page-title">Osh Navbatlari</h2>
-        <i class="fas fa-sync-alt" id="refresh-icon" onclick="fetchData()"></i>
+        <i class="fas fa-sync-alt" id="refresh-icon" onclick="fetchData()" style="cursor:pointer"></i>
     </div>
 
     <div id="filter-bar" class="osh-filter" style="display: flex;">
@@ -146,28 +134,23 @@
 
     <div id="modal" class="modal" onclick="if(event.target == this) closeModal()">
         <div class="modal-content">
-            <div id="modal-body"></div>
-            <button onclick="closeModal()" style="width:100%; padding:15px; margin-top:20px; border:none; border-radius:12px; background:#f0f2f5; font-weight:700; cursor:pointer; color: #333;">Yopish</button>
+            <img id="modal-img" class="modal-img-floating" src="" alt="user">
+            <div class="modal-scroll">
+                <div id="modal-body" style="text-align: center;"></div>
+            </div>
+            <button onclick="closeModal()" style="width:100%; padding:16px; border:none; border-radius:18px; background:var(--primary); color:white; font-weight:700; cursor:pointer; font-size:16px;">Yopish</button>
         </div>
     </div>
 
     <div class="bottom-nav">
-        <div class="nav-item active" onclick="changeTab('T1', 'Osh Navbatlari', this)">
-            <i class="fas fa-utensils"></i><span>Osh</span>
-        </div>
-        <div class="nav-item" onclick="changeTab('T3', 'Alg\'ov', this)">
-            <i class="fas fa-mountain"></i><span>Alg'ov</span>
-        </div>
-        <div class="nav-item" onclick="changeTab('T2', 'To\'yona Ro\'yxati', this)">
-            <i class="fas fa-gift"></i><span>To'yona</span>
-        </div>
+        <div class="nav-item active" onclick="changeTab('T1', 'Osh Navbatlari', this)"><i class="fas fa-utensils"></i><span>Osh</span></div>
+        <div class="nav-item" onclick="changeTab('T2', 'To\'yona Ro\'yxati', this)"><i class="fas fa-gift"></i><span>To'yona</span></div>
+        <div class="nav-item" onclick="changeTab('T3', 'Alg\'ov', this)"><i class="fas fa-mountain"></i><span>Alg'ov</span></div>
     </div>
 
     <script>
         const SHEET_ID = '1myLNznyPr7Clnsnpg0yRFmZCGd-nox4H-SJyEiu1Ul0';
-        // WebApp yoki Gviz API dan foydalanishda xavfsizlik cheklovlari (CORS) bo'lishi mumkin.
         const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
-        
         let rawData = [];
         let activeTab = 'T1';
         let activeYear = '2025';
@@ -183,69 +166,68 @@
             const icon = document.getElementById('refresh-icon');
             icon.classList.add('spin-anim');
             setTimeout(() => icon.classList.remove('spin-anim'), 800);
-
             try {
                 const res = await fetch(url);
                 const text = await res.text();
-                // JSONP ni JSON ga aylantirish
                 const json = JSON.parse(text.substring(47).slice(0, -2));
                 rawData = json.table.rows;
                 render();
-            } catch (e) { 
-                console.error("Fetch xatosi:", e);
-            }
+            } catch (e) { alert("Internet aloqasini tekshiring!"); }
         }
 
         function render() {
             const container = document.getElementById('list-container');
             container.innerHTML = '';
-            
-            rawData.forEach((row, index) => {
-                if (!row.c[0]) return;
+            let vIndex = 0; 
+            rawData.forEach((row) => {
+                if (!row.c || !row.c[0]) return;
                 const id = String(row.c[0]?.v || '');
                 const oy = String(row.c[4]?.v || '');
                 const yil = String(row.c[5]?.v || '');
+                let show = (activeTab === 'T1') ? (id.startsWith('T1') && yil === activeYear) : id.startsWith(activeTab);
                 
-                const isMatch = (activeTab === 'T1') ? (id.startsWith('T1') && yil === activeYear) : id.startsWith(activeTab);
-
-                if (isMatch) {
-                    const item = {
-                        title: row.c[2]?.v || '',
-                        desc: row.c[3]?.v || '',
-                        date: oy + (yil ? " " + yil : ""),
-                        status: row.c[6]?.v || '',
-                        icon: row.c[7]?.v || 'star'
+                if (show) {
+                    const item = { 
+                        title: row.c[2]?.v || '', 
+                        desc: row.c[3]?.v || '', 
+                        date: oy + (yil ? " " + yil : ""), 
+                        status: row.c[6]?.v || '', 
+                        img: row.c[7]?.v || 'https://cdn-icons-png.flaticon.com/512/149/149071.png' 
                     };
-
+                    
                     const div = document.createElement('div');
                     div.className = 'list-card';
-                    div.style.animationDelay = (index * 0.05) + 's';
+                    div.style.animationDelay = (vIndex * 0.05) + 's';
                     div.onclick = () => openModal(item);
                     div.innerHTML = `
-                        <div class="icon-box"><i class="fas fa-${item.icon}"></i></div>
-                        <div class="info">
-                            <h4 style="margin:0; color:#333;">${item.title}</h4>
-                            <p style="margin:5px 0 0; font-size:12px; color:#888;">${item.date} <span style="background:#eee; padding:2px 6px; border-radius:4px; font-size:10px; color:#555; margin-left:5px;">${item.status}</span></p>
+                        <div class="list-img-box">
+                            <img src="${item.img}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
                         </div>
-                    `;
+                        <div class="info">
+                            <h4>${item.title}</h4>
+                            <p>${item.date} • <span style="background:#f0f7ff; color:var(--primary); padding:2px 6px; border-radius:4px; font-weight:600;">${item.status}</span></p>
+                        </div>`;
                     container.appendChild(div);
+                    vIndex++;
                 }
             });
         }
 
         function openModal(item) {
-            // Deskriptionni chiroyli formatlash
-            let formattedDesc = item.desc.replace(/(\d+\.)/g, '<br><b>$1</b>');
-
+            document.getElementById('modal-img').src = item.img;
+            let formattedDesc = item.desc.replace(/(\d+\.)/g, '<br>$1');
             document.getElementById('modal-body').innerHTML = `
-                <h2 style="margin-top:0; color:#333; font-size:22px;">${item.title}</h2>
-                <p style="color:var(--primary); font-weight:bold; margin-bottom:15px;"><i class="far fa-calendar-alt"></i> ${item.date}</p>
+                <h2 style="margin: 10px 0 5px 0; color:var(--text);">${item.title}</h2>
+                <p style="color:var(--primary); font-weight:bold; margin-bottom:20px;">
+                    <i class="far fa-calendar-alt"></i> ${item.date}
+                </p>
                 <div class="desc-text">${formattedDesc}</div>
-                <div style="margin-top:15px;"><span style="background:var(--primary); color:white; padding:5px 12px; border-radius:6px; font-size:12px; font-weight:600;">${item.status}</span></div>
-            `;
+                <p style="margin-top:15px;">
+                    <span style="background:var(--primary); color:white; padding:6px 15px; border-radius:10px; font-size:13px; font-weight:700; box-shadow: 0 4px 10px rgba(74,144,226,0.3);">${item.status}</span>
+                </p>`;
             const m = document.getElementById('modal');
             m.style.display = 'flex';
-            setTimeout(() => m.classList.add('active'), 50);
+            setTimeout(() => m.classList.add('active'), 10);
         }
 
         function closeModal() {
@@ -270,7 +252,7 @@
             render();
         }
 
-        window.onload = fetchData;
+        fetchData();
     </script>
 </body>
 </html>
