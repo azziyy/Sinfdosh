@@ -48,10 +48,44 @@
             backdrop-filter: blur(4px); transition: 0.4s;
         }
 
-        /* --- FILTR BAR --- */
+        /* --- FILTR BAR (YIL) --- */
         .osh-filter { display: none; background: #fff; padding: 12px; justify-content: center; gap: 12px; border-bottom: 1px solid #eee; }
         .year-btn { padding: 6px 22px; border-radius: 20px; border: 1.5px solid #d1d8e0; color: #7f8c8d; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.3s; }
         .year-btn.active { background: var(--primary); color: white; border-color: var(--primary); transform: scale(1.05); }
+
+        /* --- FOND UI (Yangi qism) --- */
+        .fund-dashboard {
+            display: none; /* JS orqali yoqiladi */
+            background: white; padding: 15px; flex-direction: column; gap: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        /* 1. Jami summa bloki */
+        .fund-total-card {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white; padding: 20px; border-radius: 18px;
+            text-align: center; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .fund-total-title { font-size: 13px; opacity: 0.9; margin-bottom: 5px; font-weight: 500; }
+        .fund-total-amount { font-size: 28px; font-weight: 800; margin: 0; letter-spacing: 0.5px; }
+
+        /* 2. Oylar Scroll menyusi */
+        .month-scroll-wrapper {
+            display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px;
+            -webkit-overflow-scrolling: touch; /* Silliq scroll uchun */
+        }
+        .month-scroll-wrapper::-webkit-scrollbar { display: none; } /* Scrollbarni yashirish */
+
+        .month-btn {
+            padding: 8px 18px; border-radius: 12px; border: 1px solid #eee;
+            background: #f8f9fa; color: #555; font-size: 13px; font-weight: 600;
+            white-space: nowrap; cursor: pointer; transition: 0.2s; flex-shrink: 0;
+        }
+        .month-btn.active {
+            background: var(--text); color: white; border-color: var(--text);
+            box-shadow: 0 4px 10px rgba(44, 62, 80, 0.2);
+        }
 
         /* --- LISTVIEW --- */
         .container { padding: 12px; max-width: 550px; margin: auto; }
@@ -64,19 +98,18 @@
         .list-card:active { transform: scale(0.96); }
 
         .list-img-box {
-            width: 65px; height: 65px; border-radius: 50%; 
-            overflow: hidden; margin-right: 18px; border: 2px solid #f0f3f7; flex-shrink: 0;
+            width: 60px; height: 60px; border-radius: 50%; 
+            overflow: hidden; margin-right: 15px; border: 2px solid #f0f3f7; flex-shrink: 0;
         }
         .list-img-box img { width: 100%; height: 100%; object-fit: cover; }
 
         .info { flex: 1; }
-        .info h4 { margin: 0; font-size: 17px; color: var(--text); }
-        .info p { margin: 5px 0 0; font-size: 12px; color: #888; }
+        .info h4 { margin: 0; font-size: 16px; color: var(--text); }
+        .info p { margin: 4px 0 0; font-size: 12px; color: #888; }
         
-        /* Fond uchun maxsus summa stili */
         .money-badge {
             background: #e8f5e9; color: #2e7d32; padding: 4px 8px; 
-            border-radius: 8px; font-weight: bold; font-size: 13px;
+            border-radius: 8px; font-weight: bold; font-size: 12px; display: inline-block;
         }
 
         /* --- MODAL --- */
@@ -90,17 +123,16 @@
         .modal.active .modal-content { transform: translateY(0); }
 
         .modal-img-floating {
-            width: 130px; height: 130px; border-radius: 50%; border: 6px solid white;
-            position: absolute; top: -65px; left: 50%; transform: translateX(-50%);
+            width: 120px; height: 120px; border-radius: 50%; border: 6px solid white;
+            position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
             box-shadow: 0 12px 25px rgba(0,0,0,0.2); background: white; object-fit: cover; z-index: 4001;
         }
 
-        .modal-scroll { overflow-y: auto; flex-grow: 1; margin-top: 65px; padding-bottom: 15px; }
-        .desc-text { white-space: pre-line; line-height: 1.8; color: #444; font-size: 15px; background: #f8f9fa; padding: 20px; border-radius: 20px; border: 1px solid #eee; text-align: left; }
+        .modal-scroll { overflow-y: auto; flex-grow: 1; margin-top: 60px; padding-bottom: 15px; }
+        .desc-text { white-space: pre-line; line-height: 1.8; color: #444; font-size: 14px; background: #f8f9fa; padding: 20px; border-radius: 20px; border: 1px solid #eee; text-align: left; }
         
-        /* Fond tarixi jadvali */
         .fund-history-item {
-            display: flex; justify-content: space-between; padding: 10px;
+            display: flex; justify-content: space-between; padding: 12px 5px;
             border-bottom: 1px solid #eee; font-size: 14px;
         }
         .fund-history-item:last-child { border-bottom: none; }
@@ -116,7 +148,6 @@
         .spin-anim { animation: spin 0.8s ease-in-out; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Elementlar ramkasini o'chirish */
         * { -webkit-tap-highlight-color: transparent; outline: none !important; }
     </style>
 </head>
@@ -138,9 +169,32 @@
         <i class="fas fa-sync-alt" id="refresh-icon" onclick="fetchData()" style="cursor:pointer"></i>
     </div>
 
-    <div id="filter-bar" class="osh-filter" style="display: flex;">
+    <div id="year-filter-bar" class="osh-filter" style="display: flex;">
         <div class="year-btn active" onclick="changeYear('2025', this)">2025</div>
         <div class="year-btn" onclick="changeYear('2026', this)">2026</div>
+    </div>
+
+    <div id="fund-ui" class="fund-dashboard">
+        <div class="fund-total-card">
+            <div class="fund-total-title">Jami Yig'ilgan Summa</div>
+            <div class="fund-total-amount" id="fund-total-display">0 so'm</div>
+        </div>
+        
+        <div class="month-scroll-wrapper">
+            <button class="month-btn active" onclick="filterFundByMonth('Barcha', this)">Barcha</button>
+            <button class="month-btn" onclick="filterFundByMonth('Yanvar', this)">Yanvar</button>
+            <button class="month-btn" onclick="filterFundByMonth('Fevral', this)">Fevral</button>
+            <button class="month-btn" onclick="filterFundByMonth('Mart', this)">Mart</button>
+            <button class="month-btn" onclick="filterFundByMonth('Aprel', this)">Aprel</button>
+            <button class="month-btn" onclick="filterFundByMonth('May', this)">May</button>
+            <button class="month-btn" onclick="filterFundByMonth('Iyun', this)">Iyun</button>
+            <button class="month-btn" onclick="filterFundByMonth('Iyul', this)">Iyul</button>
+            <button class="month-btn" onclick="filterFundByMonth('Avgust', this)">Avgust</button>
+            <button class="month-btn" onclick="filterFundByMonth('Sentyabr', this)">Sentyabr</button>
+            <button class="month-btn" onclick="filterFundByMonth('Oktyabr', this)">Oktyabr</button>
+            <button class="month-btn" onclick="filterFundByMonth('Noyabr', this)">Noyabr</button>
+            <button class="month-btn" onclick="filterFundByMonth('Dekabr', this)">Dekabr</button>
+        </div>
     </div>
 
     <div class="container" id="list-container"></div>
@@ -168,6 +222,7 @@
         let rawData = [];
         let activeTab = 'T1';
         let activeYear = '2025';
+        let activeFundFilter = 'Barcha'; // 'Barcha' yoki oy nomi
 
         function toggleDrawer() {
             const d = document.getElementById('drawer');
@@ -193,62 +248,89 @@
             return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
         }
 
+        function filterFundByMonth(month, el) {
+            activeFundFilter = month;
+            // Tugmalar rangini o'zgartirish
+            document.querySelectorAll('.month-btn').forEach(btn => btn.classList.remove('active'));
+            el.classList.add('active');
+            render();
+        }
+
         function render() {
             const container = document.getElementById('list-container');
             container.innerHTML = '';
             let vIndex = 0;
 
-            // FOND (T4) LOGIKASI - Guruhlash va Hisoblash
             if (activeTab === 'T4') {
-                let fondData = {};
-                
+                // --- FOND LOGIKASI ---
+                let fondData = [];
+                let totalSum = 0;
+
+                // 1. Ma'lumotlarni yig'ish
                 rawData.forEach(row => {
                     if (!row.c || !row.c[0]) return;
                     const id = String(row.c[0]?.v || '');
                     const yil = String(row.c[5]?.v || '');
+                    const oy = String(row.c[4]?.v || ''); // Oy ustuni
 
                     if (id === 'T4' && yil === activeYear) {
-                        const name = row.c[2]?.v || 'Nomsiz';
-                        const amount = parseInt(row.c[3]?.v) || 0; // D ustunidan pulni oladi
-                        const oy = row.c[4]?.v || '';
-                        const img = row.c[7]?.v || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-
-                        if (!fondData[name]) {
-                            fondData[name] = { total: 0, history: [], img: img };
+                        // Filtr tekshiruvi (Barcha yoki Aniq oy)
+                        if (activeFundFilter === 'Barcha' || activeFundFilter === oy) {
+                            const name = row.c[2]?.v || 'Nomsiz';
+                            const amount = parseInt(row.c[3]?.v) || 0;
+                            const img = row.c[7]?.v || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                            
+                            fondData.push({ name, amount, oy, img });
+                            totalSum += amount;
                         }
-                        fondData[name].total += amount;
-                        fondData[name].history.push({ oy: oy, sum: amount });
                     }
                 });
 
-                // Yig'ilgan ma'lumotlarni chiqarish
-                if (Object.keys(fondData).length === 0) {
-                    container.innerHTML = '<p style="text-align:center;color:#999;margin-top:50px;">Bu yilda ma\'lumot yo\'q</p>';
+                // 2. Jami Summani Dashboardga chiqarish
+                document.getElementById('fund-total-display').innerText = formatMoney(totalSum) + " so'm";
+
+                // 3. Ekranga chiqarish
+                if (fondData.length === 0) {
+                    container.innerHTML = '<p style="text-align:center;color:#999;margin-top:50px;">Bu davrda to\'lovlar yo\'q</p>';
                     return;
                 }
 
-                Object.keys(fondData).forEach(name => {
-                    const person = fondData[name];
-                    const div = document.createElement('div');
-                    div.className = 'list-card';
-                    div.style.animationDelay = (vIndex * 0.05) + 's';
-                    div.onclick = () => openFondModal(name, person);
-                    div.innerHTML = `
-                        <div class="list-img-box">
-                            <img src="${person.img}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
-                        </div>
-                        <div class="info">
-                            <h4>${name}</h4>
-                            <p>Jami: <span class="money-badge">${formatMoney(person.total)} so'm</span></p>
-                        </div>
-                        <i class="fas fa-chevron-right" style="color:#ddd;"></i>
-                    `;
-                    container.appendChild(div);
-                    vIndex++;
-                });
+                if (activeFundFilter === 'Barcha') {
+                    // "Barcha" holatida - Ismlarni guruhlaymiz
+                    let groupedData = {};
+                    fondData.forEach(item => {
+                        if (!groupedData[item.name]) {
+                            groupedData[item.name] = { total: 0, history: [], img: item.img };
+                        }
+                        groupedData[item.name].total += item.amount;
+                        groupedData[item.name].history.push({ oy: item.oy, sum: item.amount });
+                    });
+
+                    Object.keys(groupedData).forEach(name => {
+                        const person = groupedData[name];
+                        createCard(container, name, person.total, person.img, vIndex, () => openFondModal(name, person));
+                        vIndex++;
+                    });
+                } else {
+                    // "Oy" holatida - Ro'yxat shaklida chiqaramiz (Guruhlamasdan)
+                    // Chunki bir oyda bir kishi odatda bir marta to'laydi
+                    fondData.forEach(item => {
+                        // Bu yerda modal uchun full history kerak bo'lsa, yana qayta qidirish kerak bo'ladi
+                        // Hozircha "Barcha" dagi modalni ochish uchun funksiya yozamiz
+                        // Yoki oddiyroq qilib, shu oy uchun ma'lumotni chiqaramiz
+                        // Foydalanuvchi talabi: "barchasida biror-bir odamni ustiga bosib... qaysi oylarni bergani ko'rinadi"
+                        // Demak, oyda turganda ham bosganda to'liq tarixi chiqishi kerak.
+                        
+                        // Buning uchun shu odamni to'liq tarixini topib olamiz
+                        const personFullHistory = getPersonFullHistory(item.name);
+
+                        createCard(container, item.name, item.amount, item.img, vIndex, () => openFondModal(item.name, personFullHistory));
+                        vIndex++;
+                    });
+                }
 
             } else {
-                // T1, T2, T3 LOGIKASI (Standart)
+                // --- STANDART LOGIKA (T1, T2, T3) ---
                 rawData.forEach((row) => {
                     if (!row.c || !row.c[0]) return;
                     const id = String(row.c[0]?.v || '');
@@ -285,7 +367,45 @@
             }
         }
 
-        // Oddiy Modal (T1, T2, T3)
+        // Yordamchi funksiya: Card yaratish
+        function createCard(container, title, amount, img, index, onClick) {
+            const div = document.createElement('div');
+            div.className = 'list-card';
+            div.style.animationDelay = (index * 0.05) + 's';
+            div.onclick = onClick;
+            div.innerHTML = `
+                <div class="list-img-box">
+                    <img src="${img}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
+                </div>
+                <div class="info">
+                    <h4>${title}</h4>
+                    <p>${activeFundFilter === 'Barcha' ? 'Jami:' : activeFundFilter + ':'} <span class="money-badge">${formatMoney(amount)} so'm</span></p>
+                </div>
+                <i class="fas fa-chevron-right" style="color:#ddd;"></i>
+            `;
+            container.appendChild(div);
+        }
+
+        // Yordamchi: Odamning to'liq tarixini olish (Oy bo'yicha filtrlanganda ham modalda hammasi chiqishi uchun)
+        function getPersonFullHistory(name) {
+             let person = { total: 0, history: [], img: '' };
+             rawData.forEach(row => {
+                if (!row.c || !row.c[0]) return;
+                const id = String(row.c[0]?.v || '');
+                const yil = String(row.c[5]?.v || '');
+                if (id === 'T4' && yil === activeYear) {
+                    const rowName = row.c[2]?.v || '';
+                    if (rowName === name) {
+                        const amount = parseInt(row.c[3]?.v) || 0;
+                        person.total += amount;
+                        person.img = row.c[7]?.v || person.img;
+                        person.history.push({ oy: row.c[4]?.v, sum: amount });
+                    }
+                }
+             });
+             return person;
+        }
+
         function openModal(item) {
             document.getElementById('modal-img').src = item.img;
             let formattedDesc = item.desc.replace(/(\d+\.)/g, '<br>$1');
@@ -301,10 +421,8 @@
             openModalAnimation();
         }
 
-        // Fond Modali (T4)
         function openFondModal(name, person) {
             document.getElementById('modal-img').src = person.img;
-            
             let historyHTML = '';
             person.history.forEach(h => {
                 historyHTML += `
@@ -317,12 +435,10 @@
             document.getElementById('modal-body').innerHTML = `
                 <h2 style="margin: 10px 0 5px 0; color:var(--text);">${name}</h2>
                 <p style="color:#888; margin-bottom:20px;">Fond hisoboti (${activeYear})</p>
-                
                 <div style="background:#f8f9fa; border-radius:15px; padding:15px; margin-bottom:15px;">
-                    <div style="font-size:12px; color:#666;">Jami Yig'ilgan:</div>
+                    <div style="font-size:12px; color:#666;">Yillik Jami To'lov:</div>
                     <div style="font-size:24px; font-weight:bold; color:var(--primary);">${formatMoney(person.total)} so'm</div>
                 </div>
-
                 <div class="desc-text" style="padding:10px;">
                     <h4 style="margin:0 0 10px 0; border-bottom:1px solid #ddd; padding-bottom:5px;">To'lovlar Tarixi</h4>
                     ${historyHTML}
@@ -348,12 +464,21 @@
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             el.classList.add('active');
             
-            // Filtr faqat T1 (Osh) va T4 (Fond) da ko'rinadi
-            const filterBar = document.getElementById('filter-bar');
-            if (tab === 'T1' || tab === 'T4') {
-                filterBar.style.display = 'flex';
+            const yearFilter = document.getElementById('year-filter-bar');
+            const fundUi = document.getElementById('fund-ui');
+            
+            // UI elementlarini boshqarish
+            if (tab === 'T1') {
+                yearFilter.style.display = 'flex';
+                fundUi.style.display = 'none';
+            } else if (tab === 'T4') {
+                yearFilter.style.display = 'flex'; // Yilni tanlash fond uchun ham kerak
+                fundUi.style.display = 'flex';     // Fond dashboardini yoqish
+                // Default 'Barcha' ga qaytarish
+                filterFundByMonth('Barcha', document.querySelector('.month-btn'));
             } else {
-                filterBar.style.display = 'none';
+                yearFilter.style.display = 'none';
+                fundUi.style.display = 'none';
             }
             render();
         }
