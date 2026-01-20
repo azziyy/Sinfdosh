@@ -49,18 +49,15 @@
         }
 
         /* --- FILTR BAR (YIL) --- */
-        .osh-filter { display: none; background: #fff; padding: 12px; justify-content: center; gap: 12px; border-bottom: 1px solid #eee; }
-        .year-btn { padding: 6px 22px; border-radius: 20px; border: 1.5px solid #d1d8e0; color: #7f8c8d; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.3s; }
+        .osh-filter { display: none; background: #fff; padding: 12px; justify-content: center; gap: 12px; border-bottom: 1px solid #eee; overflow-x: auto; }
+        .year-btn { padding: 6px 22px; border-radius: 20px; border: 1.5px solid #d1d8e0; color: #7f8c8d; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.3s; white-space: nowrap; }
         .year-btn.active { background: var(--primary); color: white; border-color: var(--primary); transform: scale(1.05); }
 
-        /* --- FOND UI (Yangi qism) --- */
+        /* --- FOND UI --- */
         .fund-dashboard {
-            display: none; /* JS orqali yoqiladi */
-            background: white; padding: 15px; flex-direction: column; gap: 15px;
+            display: none; background: white; padding: 15px; flex-direction: column; gap: 15px;
             border-bottom: 1px solid #eee;
         }
-
-        /* 1. Jami summa bloki */
         .fund-total-card {
             background: linear-gradient(135deg, #2ecc71, #27ae60);
             color: white; padding: 20px; border-radius: 18px;
@@ -70,12 +67,11 @@
         .fund-total-title { font-size: 13px; opacity: 0.9; margin-bottom: 5px; font-weight: 500; }
         .fund-total-amount { font-size: 28px; font-weight: 800; margin: 0; letter-spacing: 0.5px; }
 
-        /* 2. Oylar Scroll menyusi */
         .month-scroll-wrapper {
             display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px;
-            -webkit-overflow-scrolling: touch; /* Silliq scroll uchun */
+            -webkit-overflow-scrolling: touch;
         }
-        .month-scroll-wrapper::-webkit-scrollbar { display: none; } /* Scrollbarni yashirish */
+        .month-scroll-wrapper::-webkit-scrollbar { display: none; }
 
         .month-btn {
             padding: 8px 18px; border-radius: 12px; border: 1px solid #eee;
@@ -169,10 +165,7 @@
         <i class="fas fa-sync-alt" id="refresh-icon" onclick="fetchData()" style="cursor:pointer"></i>
     </div>
 
-    <div id="year-filter-bar" class="osh-filter" style="display: flex;">
-        <div class="year-btn active" onclick="changeYear('2025', this)">2025</div>
-        <div class="year-btn" onclick="changeYear('2026', this)">2026</div>
-    </div>
+    <div id="year-filter-bar" class="osh-filter" style="display: flex;"></div>
 
     <div id="fund-ui" class="fund-dashboard">
         <div class="fund-total-card">
@@ -221,8 +214,8 @@
         const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
         let rawData = [];
         let activeTab = 'T1';
-        let activeYear = '2025';
-        let activeFundFilter = 'Barcha'; // 'Barcha' yoki oy nomi
+        let activeYear = ''; // Avtomatik aniqlanadi
+        let activeFundFilter = 'Barcha';
 
         function toggleDrawer() {
             const d = document.getElementById('drawer');
@@ -240,8 +233,52 @@
                 const text = await res.text();
                 const json = JSON.parse(text.substring(47).slice(0, -2));
                 rawData = json.table.rows;
+                
+                // Ma'lumot kelgandan keyin Yillar tugmasini yasash
+                initDynamicYears(); 
                 render();
             } catch (e) { alert("Internet aloqasini tekshiring!"); }
+        }
+
+        // --- YANGI: AVTOMATIK YIL TUZISH FUNKSIYASI ---
+        function initDynamicYears() {
+            const currentSystemYear = new Date().getFullYear().toString();
+            let yearsSet = new Set();
+            
+            // 1. Joriy yilni albatta qo'shamiz (Jadvalda bo'lmasa ham)
+            yearsSet.add(currentSystemYear);
+
+            // 2. Jadvaldagi barcha yillarni yig'amiz
+            rawData.forEach(row => {
+                if (row.c && row.c[5]) { // F ustuni (Yil)
+                    let y = String(row.c[5].v).trim();
+                    if (y && !isNaN(y)) yearsSet.add(y);
+                }
+            });
+
+            // 3. Yillarni tartiblaymiz (2025, 2026, 2027...)
+            let sortedYears = Array.from(yearsSet).sort();
+
+            // 4. Ekranga tugmalarni chiqaramiz
+            const wrapper = document.getElementById('year-filter-bar');
+            wrapper.innerHTML = ''; // Eskilarini tozalash
+
+            // Agar activeYear hali tanlanmagan bo'lsa, Joriy yilni tanlaymiz
+            if (!activeYear) {
+                activeYear = currentSystemYear;
+            }
+
+            sortedYears.forEach(year => {
+                const btn = document.createElement('div');
+                btn.className = 'year-btn';
+                btn.innerText = year;
+                // Agar shu yil active bo'lsa, rangini o'zgartiramiz
+                if (year === activeYear) {
+                    btn.classList.add('active');
+                }
+                btn.onclick = () => changeYear(year, btn);
+                wrapper.appendChild(btn);
+            });
         }
 
         function formatMoney(amount) {
@@ -250,7 +287,6 @@
 
         function filterFundByMonth(month, el) {
             activeFundFilter = month;
-            // Tugmalar rangini o'zgartirish
             document.querySelectorAll('.month-btn').forEach(btn => btn.classList.remove('active'));
             el.classList.add('active');
             render();
@@ -266,15 +302,13 @@
                 let fondData = [];
                 let totalSum = 0;
 
-                // 1. Ma'lumotlarni yig'ish
                 rawData.forEach(row => {
                     if (!row.c || !row.c[0]) return;
                     const id = String(row.c[0]?.v || '');
                     const yil = String(row.c[5]?.v || '');
-                    const oy = String(row.c[4]?.v || ''); // Oy ustuni
+                    const oy = String(row.c[4]?.v || '');
 
                     if (id === 'T4' && yil === activeYear) {
-                        // Filtr tekshiruvi (Barcha yoki Aniq oy)
                         if (activeFundFilter === 'Barcha' || activeFundFilter === oy) {
                             const name = row.c[2]?.v || 'Nomsiz';
                             const amount = parseInt(row.c[3]?.v) || 0;
@@ -286,17 +320,14 @@
                     }
                 });
 
-                // 2. Jami Summani Dashboardga chiqarish
                 document.getElementById('fund-total-display').innerText = formatMoney(totalSum) + " so'm";
 
-                // 3. Ekranga chiqarish
                 if (fondData.length === 0) {
                     container.innerHTML = '<p style="text-align:center;color:#999;margin-top:50px;">Bu davrda to\'lovlar yo\'q</p>';
                     return;
                 }
 
                 if (activeFundFilter === 'Barcha') {
-                    // "Barcha" holatida - Ismlarni guruhlaymiz
                     let groupedData = {};
                     fondData.forEach(item => {
                         if (!groupedData[item.name]) {
@@ -312,18 +343,8 @@
                         vIndex++;
                     });
                 } else {
-                    // "Oy" holatida - Ro'yxat shaklida chiqaramiz (Guruhlamasdan)
-                    // Chunki bir oyda bir kishi odatda bir marta to'laydi
                     fondData.forEach(item => {
-                        // Bu yerda modal uchun full history kerak bo'lsa, yana qayta qidirish kerak bo'ladi
-                        // Hozircha "Barcha" dagi modalni ochish uchun funksiya yozamiz
-                        // Yoki oddiyroq qilib, shu oy uchun ma'lumotni chiqaramiz
-                        // Foydalanuvchi talabi: "barchasida biror-bir odamni ustiga bosib... qaysi oylarni bergani ko'rinadi"
-                        // Demak, oyda turganda ham bosganda to'liq tarixi chiqishi kerak.
-                        
-                        // Buning uchun shu odamni to'liq tarixini topib olamiz
                         const personFullHistory = getPersonFullHistory(item.name);
-
                         createCard(container, item.name, item.amount, item.img, vIndex, () => openFondModal(item.name, personFullHistory));
                         vIndex++;
                     });
@@ -367,7 +388,6 @@
             }
         }
 
-        // Yordamchi funksiya: Card yaratish
         function createCard(container, title, amount, img, index, onClick) {
             const div = document.createElement('div');
             div.className = 'list-card';
@@ -386,7 +406,6 @@
             container.appendChild(div);
         }
 
-        // Yordamchi: Odamning to'liq tarixini olish (Oy bo'yicha filtrlanganda ham modalda hammasi chiqishi uchun)
         function getPersonFullHistory(name) {
              let person = { total: 0, history: [], img: '' };
              rawData.forEach(row => {
@@ -467,14 +486,12 @@
             const yearFilter = document.getElementById('year-filter-bar');
             const fundUi = document.getElementById('fund-ui');
             
-            // UI elementlarini boshqarish
             if (tab === 'T1') {
                 yearFilter.style.display = 'flex';
                 fundUi.style.display = 'none';
             } else if (tab === 'T4') {
-                yearFilter.style.display = 'flex'; // Yilni tanlash fond uchun ham kerak
-                fundUi.style.display = 'flex';     // Fond dashboardini yoqish
-                // Default 'Barcha' ga qaytarish
+                yearFilter.style.display = 'flex';
+                fundUi.style.display = 'flex';
                 filterFundByMonth('Barcha', document.querySelector('.month-btn'));
             } else {
                 yearFilter.style.display = 'none';
@@ -485,6 +502,7 @@
 
         function changeYear(y, el) {
             activeYear = y;
+            // Yangilangan dinamik tugmalar orasidan active qilish
             document.querySelectorAll('.year-btn').forEach(b => b.classList.remove('active'));
             el.classList.add('active');
             render();
