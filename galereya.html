@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Masonry Gallery with Tags</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial;background:#f5f5f5}
+
+/* TOP BAR */
+.top-bar{
+  position:fixed;top:0;left:0;right:0;
+  height:60px;background:#333;
+  display:flex;align-items:center;
+  padding:0 10px;z-index:1000
+}
+.hamburger{font-size:30px;color:#fff;cursor:pointer;margin-right:15px}
+.search-box input{width:220px;padding:8px;border-radius:5px;border:none}
+
+/* DRAWER */
+.drawer{
+  position:fixed;top:0;left:0;width:250px;height:100%;
+  background:#333;color:#fff;padding-top:60px;
+  transform:translateX(-260px);transition:.3s;z-index:1100
+}
+.drawer.open{transform:translateX(0)}
+.drawer ul{list-style:none}
+.drawer li{padding:10px 20px;cursor:pointer}
+.drawer li:hover,.drawer li.active{background:#444}
+.close-drawer{position:absolute;top:10px;right:15px;font-size:25px;cursor:pointer}
+
+/* GALLERY */
+.gallery{
+  column-count:2;
+  column-gap:3px;
+  padding:65px 5px 2px;
+}
+.gallery img{
+  width:100%;
+  margin-bottom:3px;
+  border-radius:4px;
+  cursor:pointer;
+  transition:.3s
+}
+.gallery img:hover{transform:scale(1.04)}
+
+/* LOADER – SHAFFOF + KICHIK */
+.loader{
+  position:fixed;
+  inset:0;
+  display:none;
+  justify-content:center;
+  align-items:center;
+  background:rgba(0,0,0,0.12);
+  z-index:2000
+}
+.loader-box{
+  background:#fff;
+  padding:18px 22px;
+  border-radius:12px;
+  box-shadow:0 10px 25px rgba(0,0,0,.2);
+  text-align:center;
+  min-width:220px
+}
+.progress-bar{
+  width:100%;
+  height:6px;
+  background:#ddd;
+  border-radius:5px;
+  overflow:hidden;
+  margin-top:10px
+}
+.progress-fill{
+  height:100%;width:0%;
+  background:#4caf50;
+  transition:.3s
+}
+
+/* MODAL */
+.modal{
+  display:none;position:fixed;
+  top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,.85);
+  justify-content:center;align-items:center;
+  z-index:1300
+}
+.modal img{max-width:95%;border-radius:6px}
+.close-btn{
+  position:absolute;top:15px;right:20px;
+  font-size:30px;color:#fff;cursor:pointer
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOADER -->
+<div class="loader" id="loader">
+  <div class="loader-box">
+    <strong>Yuklanmoqda...</strong>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <small id="progressText">0%</small>
+  </div>
+</div>
+
+<div class="top-bar">
+  <div class="hamburger">&#9776;</div>
+  <div class="search-box">
+    <input type="text" id="search" placeholder="Rasm qidiruv...">
+  </div>
+</div>
+
+<div class="drawer">
+  <span class="close-drawer">&times;</span>
+  <ul>
+    <li data-cat="all" class="active">Barchasi</li>
+    <li data-cat="zapal">Zapal</li>
+    <li data-cat="snf">Sinfdoshlar</li>
+    <li data-cat="texnika">Texnika</li>
+  </ul>
+</div>
+
+<div class="gallery" id="gallery"></div>
+
+<div class="modal" id="modal">
+  <span class="close-btn" id="closeBtn">&times;</span>
+  <img id="modalImg">
+</div>
+
+<script>
+const images = [
+ {src:'https://raw.githubusercontent.com/azziyy/Rasm-/refs/heads/main/Sinfdosh%20images/IMG_20251225_181229_179.jpg',cat:'zapal', tags:['ahmadali','zapal']},
+ {src:'https://raw.githubusercontent.com/azziyy/Rasm-/refs/heads/main/Sinfdosh%20images/IMG_20251225_181229_530.jpg',cat:'zapal', tags:['ahmadali','zapal']},
+ {src:'https://telegra.ph/file/2a68f7b74f56776df8726.jpg',cat:'zapal', tags:['tillo','zapal']},
+ {src:'https://telegra.ph/file/9b8e2225418c0c67dd6eb.jpg',cat:'zapal', tags:['xurshid','zapal']},
+ {src:'https://telegra.ph/file/5dfea378ed86d4cc3093e.jpg',cat:'zapal', tags:['muhammadsodiq‘','zapal']},
+ {src:'https://telegra.ph/file/3d897945670c2b549e4f7.jpg',cat:'zapal', tags:['doston','zapal']},
+ {src:'https://telegra.ph/file/04e9889afb6aae841a73d.jpg',cat:'zapal', tags:['jasur','zapal']},
+ {src:'https://telegra.ph/file/2773742036ad379aee9f3.jpg',cat:'zapal', tags:['tillo','zapal']},
+ {src:'https://telegra.ph/file/d5d133a1b8b832715a0f0.jpg',cat:'zapal', tags:['xasanboy','zapal']},
+ {src:'https://telegra.ph/file/3ed265569ce9554e46080.jpg',cat:'zapal', tags:['xurshid','zapal']},
+ {src:'https://raw.githubusercontent.com/azziyy/Rasm-/refs/heads/main/Sinfdosh%20images/IMG_20251225_200824_383.jpg',cat:'snf', tags:['grup','top']},
+  {src:'https://raw.githubusercontent.com/azziyy/Rasm-/refs/heads/main/Sinfdosh%20images/IMG_20251225_200936_415.jpg',cat:'snf', tags:['grup','top']},
+  {src:'https://raw.githubusercontent.com/azziyy/Rasm-/refs/heads/main/Sinfdosh%20images/IMG_20251225_200940_821.jpg',cat:'snf', tags:['grup','top']},
+  {src:'https://raw.githubusercontent.com/azziyy/Rasm-/refs/heads/main/Sinfdosh%20images/IMG_20251225_201029_012.jpg',cat:'zapal', tags:['jasur','faruh']},
+  {src:'https://raw.githubusercontent.com/azziyy/Rasm-/refs/heads/main/Sinfdosh%20images/IMG_20251225_201013_625.jpg',cat:'snf', tags:['grup','top']},
+  {src:'https://raw.githubusercontent.com/azziyy/Rasm-/refs/heads/main/Sinfdosh%20images/IMG_20251225_201044_938.jpg',cat:'zapal', tags:['faruh','zapal']},
+  {src:'https://raw.githubusercontent.com/azziyy/Rasm-/refs/heads/main/Sinfdosh%20images/IMG_20251225_201127_951.jpg',cat:'snf', tags:['grup','top']},
+  {src:'https://raw.githubusercontent.com/azziyy/Rasm-/refs/heads/main/Sinfdosh%20images/IMG_20251225_202106_521.jpg',cat:'snf', tags:['grup','top']},
+  {src:'https://raw.githubusercontent.com/azziyy/Rasm-/refs/heads/main/Sinfdosh%20images/IMG_20251225_202057_729.jpg',cat:'snf', tags:['grup','top']},
+  {src:'https://raw.githubusercontent.com/azziyy/Rasm-/refs/heads/main/Sinfdosh%20images/IMG_20251225_202046_646.jpg',cat:'snf', tags:['grup','top']},
+];
+
+// RANDOM
+function shuffle(arr){ return arr.sort(()=>Math.random()-0.5); }
+
+const gallery = document.getElementById('gallery');
+const loader = document.getElementById('loader');
+const progressFill = document.getElementById('progressFill');
+const progressText = document.getElementById('progressText');
+const modal = document.getElementById('modal');
+const modalImg = document.getElementById('modalImg');
+const cats = document.querySelectorAll('.drawer li');
+const searchInput = document.getElementById('search');
+
+function loadGallery(category='all', keyword=''){
+  gallery.innerHTML='';
+  loader.style.display='flex';
+
+  keyword = keyword.toLowerCase();
+
+  let filtered = images.filter(img=>{
+    const matchCat = category==='all'? true : img.cat===category;
+    const matchSearch = img.tags.some(t=>t.toLowerCase().includes(keyword)) || img.src.toLowerCase().includes(keyword);
+    return matchCat && (keyword ? matchSearch : true);
+  });
+
+  filtered = shuffle([...filtered]);
+
+  let loaded = 0;
+  const total = filtered.length || 1;
+
+  filtered.forEach(imgData=>{
+    const img = document.createElement('img');
+    img.src = imgData.src;
+    img.loading = "lazy";
+
+    img.onload = img.onerror = ()=>{
+      loaded++;
+      const percent = Math.round((loaded/total)*100);
+      progressFill.style.width = percent+'%';
+      progressText.textContent = percent+'%';
+      if(loaded===total) setTimeout(()=>loader.style.display='none',200);
+    };
+
+    img.onclick = ()=>{
+      modal.style.display='flex';
+      modalImg.src = imgData.src;
+    };
+
+    gallery.appendChild(img);
+  });
+}
+
+// INITIAL LOAD
+loadGallery('all');
+
+// CATEGORY CLICK
+cats.forEach(li=>{
+  li.onclick = ()=>{
+    cats.forEach(i=>i.classList.remove('active'));
+    li.classList.add('active');
+    loadGallery(li.dataset.cat, searchInput.value);
+    document.querySelector('.drawer').classList.remove('open');
+  };
+});
+
+// SEARCH
+searchInput.addEventListener('input', ()=>{
+  const activeCategory = document.querySelector('.drawer li.active').dataset.cat;
+  loadGallery(activeCategory, searchInput.value);
+});
+
+// MODAL CLOSE
+document.getElementById('closeBtn').onclick = ()=>modal.style.display='none';
+
+// DRAWER
+document.querySelector('.hamburger').onclick = () => document.querySelector('.drawer').classList.add('open');
+document.querySelector('.close-drawer').onclick = () => document.querySelector('.drawer').classList.remove('open');
+
+</script>
+</body>
+</html>
