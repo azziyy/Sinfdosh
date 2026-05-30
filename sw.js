@@ -13,7 +13,7 @@
    (yoki index.html / config.js dagi APP_VERSION bilan bir xil tuting).
    ============================================================ */
 
-const CACHE_VERSION = '2.0.0';
+const CACHE_VERSION = '2.1.0';
 const CACHE_NAME = `jamoa-static-${CACHE_VERSION}`;
 
 // Oldindan keshlanadigan asosiy fayllar (ilova qobig'i / app shell)

@@ -2,7 +2,7 @@
 <html lang="uz">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#0f172a" />
 
   <!-- KESH BOSHQARUVI: index.html HECH QACHON keshlanmaydi. Shunda kod (css/js)
@@ -18,7 +18,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- ?v= versiya — CONFIG.APP_VERSION bilan bir xil. Stilni o'zgartirganda
        config.js dagi APP_VERSION va bu yerdagi v= raqamini oshiring. -->
-  <link rel="stylesheet" href="css/style.css?v=2.0.0" />
+  <link rel="stylesheet" href="css/style.css?v=2.1.0" />
 </head>
 <body>
 
@@ -73,7 +73,7 @@
         <div class="selected-member" id="selected-member-info"></div>
         <label>Maxfiy kod</label>
         <div class="password-input-wrap">
-          <input type="password" id="password-input" placeholder="••••••" />
+          <input type="password" id="password-input" placeholder="••••••" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" />
           <button id="toggle-password" class="toggle-eye">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
@@ -326,9 +326,9 @@
   <div id="toast" class="toast hidden"></div>
 
   <!-- ?v= versiya — kod o'zgarganda APP_VERSION bilan birga oshiring -->
-  <script src="js/config.js?v=2.0.0"></script>
-  <script src="js/data.js?v=2.0.0"></script>
-  <script src="js/app.js?v=2.0.0"></script>
+  <script src="js/config.js?v=2.1.0"></script>
+  <script src="js/data.js?v=2.1.0"></script>
+  <script src="js/app.js?v=2.1.0"></script>
 
   <!-- =========== SERVICE WORKER =========== -->
   <!-- Statik fayllar (rasm, css, js) keshlanadi (tez ochiladi va offline ishlaydi),
