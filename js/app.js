@@ -470,19 +470,30 @@ const App = {
     const indicator = document.getElementById('ptr-indicator');
     if (!appEl || !indicator) return;
 
-    const THRESHOLD = 75;     // shu masofadan ortiq tortilsa yangilanadi
-    const MAX_PULL = 130;     // indikatorning maksimal tushish masofasi
+    // Sezgirlikni kamaytirish uchun qiymatlar oshirildi:
+    const ACTIVATE_DIST = 30;   // ko'rinishni boshlash uchun minimal masofa (px)
+    const THRESHOLD = 110;      // shu masofadan ortiq tortilsa yangilanadi (oldin 75)
+    const MAX_PULL = 150;       // indikatorning maksimal tushish masofasi
+    const RESISTANCE = 0.35;    // qarshilik (kichikroq qiymat — sekinroq cho'ziladi, oldin 0.5)
+    const MIN_COOLDOWN = 1500;  // yangilashlar orasidagi minimal pauza (ms)
+
     let startY = 0;
     let pulling = false;
+    let activated = false;     // ACTIVATE_DIST oshib o'tganidan keyin true bo'ladi
     let distance = 0;
+    let lastRefreshTs = 0;
 
     const atTop = () => (window.scrollY || document.documentElement.scrollTop || 0) <= 0;
 
     appEl.addEventListener('touchstart', (e) => {
       if (this._refreshing) return;
+      // Cooldown: oxirgi yangilashdan keyin biroz vaqt o'tmaguncha qayta ishga tushmasin
+      if (Date.now() - lastRefreshTs < MIN_COOLDOWN) return;
+      // Faqat bitta barmoq bilan va sahifa tepasida bo'lganda
       if (atTop() && e.touches.length === 1) {
         startY = e.touches[0].clientY;
         pulling = true;
+        activated = false;
         distance = 0;
       } else {
         pulling = false;
@@ -495,10 +506,15 @@ const App = {
       if (dy <= 0) { // yuqoriga — odatiy skrol
         indicator.classList.remove('visible');
         distance = 0;
+        activated = false;
         return;
       }
-      // Qarshilik effekti (resistance)
-      distance = Math.min(MAX_PULL, dy * 0.5);
+      // ACTIVATE_DIST oshmaguncha hech narsa ko'rsatmaymiz (tasodifiy tegishlardan himoya)
+      if (dy < ACTIVATE_DIST) return;
+      activated = true;
+      // Qarshilik effekti (resistance) — cho'zilish sekinroq bo'lsin
+      const effective = (dy - ACTIVATE_DIST) * RESISTANCE;
+      distance = Math.min(MAX_PULL, effective);
       indicator.style.transform = `translateX(-50%) translateY(${distance}px)`;
       const ic = indicator.querySelector('.ptr-circle');
       if (ic) ic.style.transform = `rotate(${distance * 3}deg)`;
@@ -509,11 +525,15 @@ const App = {
     const endPull = async () => {
       if (!pulling) return;
       pulling = false;
-      const willRefresh = distance >= THRESHOLD;
+      // Faqat indikator ko'rinib turgan va threshold oshgan bo'lsa yangilash
+      const willRefresh = activated && distance >= THRESHOLD;
+      activated = false;
       if (willRefresh) {
         indicator.classList.add('loading');
         indicator.style.transform = `translateX(-50%) translateY(60px)`;
+        lastRefreshTs = Date.now();
         await this.refreshData({ silent: true });
+        lastRefreshTs = Date.now();
         showToast('Yangilandi ✅', 'success');
       }
       // Indikatorni qaytarib yashiramiz
