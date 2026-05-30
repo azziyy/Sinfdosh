@@ -1,2 +1,0 @@
-# Sinfdosh
-Sinfdoshlar web sahifa 
