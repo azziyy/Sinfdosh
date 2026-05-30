@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f172a" />
+
+  <!-- KESH BOSHQARUVI: index.html HECH QACHON keshlanmaydi. Shunda kod (css/js)
+       o'zgarsa, saytga qayta kirilganda brauzer eng yangi versiyani oladi.
+       Statik fayllar (css/js/rasm) esa Service Worker orqali keshlanadi. -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <title>Jamoa — Boshqaruv Tizimi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- ?v= versiya — CONFIG.APP_VERSION bilan bir xil. Stilni o'zgartirganda
+       config.js dagi APP_VERSION va bu yerdagi v= raqamini oshiring. -->
+  <link rel="stylesheet" href="css/style.css?v=2.0.0" />
+</head>
+<body>
+
+  <!-- =========== LOADER =========== -->
+  <div id="loader" class="loader">
+    <div class="loader-circle"></div>
+    <p>Maʼlumotlar yuklanmoqda...</p>
+  </div>
+
+  <!-- =========== LOGIN SCREEN =========== -->
+  <section id="login-screen" class="screen hidden">
+    <div class="login-bg"></div>
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="logo-circle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 00-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 010 7.75"></path>
+          </svg>
+        </div>
+        <h1>Jamoa</h1>
+        <p>Boshqaruv Tizimiga xush kelibsiz</p>
+      </div>
+
+      <button id="open-register" class="btn-primary">
+        <span>Roʻyxatdan oʻtish</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- =========== REGISTER MODAL =========== -->
+  <div id="register-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-content register-modal">
+      <button class="modal-close" data-close="register-modal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <h2>Aʼzolardan oʻzingizni tanlang</h2>
+      <p class="modal-sub">Roʻyxatdan oʻzingizni topib, maxfiy kodingizni kiriting</p>
+
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" id="member-search" placeholder="Ism boʻyicha qidirish..." />
+      </div>
+
+      <div id="member-list" class="member-list"></div>
+
+      <div id="password-step" class="password-step hidden">
+        <div class="selected-member" id="selected-member-info"></div>
+        <label>Maxfiy kod</label>
+        <div class="password-input-wrap">
+          <input type="password" id="password-input" placeholder="••••••" />
+          <button id="toggle-password" class="toggle-eye">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div id="password-error" class="error-text"></div>
+        <button id="login-btn" class="btn-primary">
+          <span>Kirish</span>
+        </button>
+        <button id="back-to-list" class="btn-text">← Boshqasini tanlash</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== SPLASH STORIES =========== -->
+  <section id="splash-stories" class="screen hidden">
+    <div class="stories-progress" id="stories-progress"></div>
+    <button class="stories-close" id="stories-close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <div class="stories-container" id="stories-container"></div>
+    <button class="stories-tap-left" id="stories-prev"></button>
+    <button class="stories-tap-right" id="stories-next"></button>
+    <div class="stories-bottom">
+      <button id="stories-to-home" class="stories-home-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        Asosiy sahifaga
+      </button>
+    </div>
+  </section>
+
+  <!-- =========== MAIN APP =========== -->
+  <main id="app" class="screen hidden">
+
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-user" id="header-user">
+        <img id="header-avatar" src="" alt="" />
+        <div>
+          <span class="header-hi">Salom 👋</span>
+          <strong id="header-name"></strong>
+        </div>
+      </div>
+      <div class="header-actions">
+        <!-- Yangilash (refresh) tugmasi — logout yonida -->
+        <button id="refresh-btn" class="header-action" title="Yangilash">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+        </button>
+        <button id="logout-btn" class="header-action" title="Chiqish">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- =========== PULL-TO-REFRESH INDIKATORI (yumaloq) =========== -->
+    <div id="ptr-indicator" class="ptr-indicator">
+      <div class="ptr-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+      </div>
+    </div>
+
+    <!-- =========== HOME PAGE =========== -->
+    <section class="page active" id="page-home">
+      <div class="page-pad">
+        <div class="welcome-card">
+          <div>
+            <h3>Xush kelibsiz!</h3>
+            <p id="welcome-text">Jamoa boshqaruv tizimiga kirdingiz</p>
+          </div>
+          <div class="welcome-emoji">🎉</div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card stat-blue">
+            <div class="stat-icon">👥</div>
+            <div class="stat-info">
+              <span class="stat-label">Aʼzolar</span>
+              <strong id="stat-members">0</strong>
+            </div>
+          </div>
+          <div class="stat-card stat-green">
+            <div class="stat-icon">💰</div>
+            <div class="stat-info">
+              <span class="stat-label">Bu oy fond</span>
+              <strong id="stat-fund">0</strong>
+            </div>
+          </div>
+          <div class="stat-card stat-orange">
+            <div class="stat-icon">🍲</div>
+            <div class="stat-info">
+              <span class="stat-label">Bu oy oshi</span>
+              <strong id="stat-osh">—</strong>
+            </div>
+          </div>
+          <div class="stat-card stat-purple">
+            <div class="stat-icon">🎂</div>
+            <div class="stat-info">
+              <span class="stat-label">Yaqin tugʻilgan kun</span>
+              <strong id="stat-bday">—</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title">
+          <h3>📰 Soʻnggi yangiliklar</h3>
+        </div>
+        <div id="home-news" class="home-news"></div>
+
+        <div class="section-title">
+          <h3>🎂 Yaqinlashayotgan tugʻilgan kunlar</h3>
+        </div>
+        <div id="home-bdays" class="home-bdays"></div>
+      </div>
+    </section>
+
+    <!-- =========== OSH NAVBATI =========== -->
+    <section class="page" id="page-osh">
+      <div class="page-pad">
+        <div class="year-switcher">
+          <button class="year-btn" data-dir="-1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div class="year-label">
+            <span class="year-title">Yil</span>
+            <strong id="osh-year">2026</strong>
+          </div>
+          <button class="year-btn" data-dir="1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+
+        <div class="section-title">
+          <h3>🍲 Osh Navbati — <span id="osh-year-2"></span></h3>
+        </div>
+
+        <div id="osh-list" class="osh-list"></div>
+      </div>
+    </section>
+
+    <!-- =========== FOND =========== -->
+    <section class="page" id="page-fond">
+      <div class="page-pad">
+        <div class="year-switcher">
+          <button class="year-btn" data-dir="-1" data-target="fond">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div class="year-label">
+            <span class="year-title">Fond yili</span>
+            <strong id="fond-year">2026</strong>
+          </div>
+          <button class="year-btn" data-dir="1" data-target="fond">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+
+        <div class="fond-total-card">
+          <div>
+            <span class="fond-total-label">Yillik umumiy fond</span>
+            <strong id="fond-total">0 soʻm</strong>
+          </div>
+          <div class="fond-total-icon">💎</div>
+        </div>
+
+        <div class="tabs">
+          <button class="tab active" data-tab="all">Barchasi</button>
+          <button class="tab" data-tab="me">Mening hisobim</button>
+        </div>
+
+        <!-- Barchasi tabi -->
+        <div id="fond-all" class="fond-tab active">
+          <div class="section-title">
+            <h3>📅 Oylik fond (gorizontal skrol)</h3>
+          </div>
+          <div id="fond-months" class="fond-months"></div>
+
+          <div class="section-title">
+            <h3>👥 Aʼzolar boʻyicha</h3>
+          </div>
+          <div id="fond-members" class="fond-members"></div>
+        </div>
+
+        <!-- Mening hisobim -->
+        <div id="fond-me" class="fond-tab">
+          <div class="section-title"><h3>📊 Mening toʻlovlarim</h3></div>
+          <div id="fond-me-list" class="fond-me-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========== TO'YONA =========== -->
+    <section class="page" id="page-toyona">
+      <div class="page-pad">
+        <div class="section-title">
+          <h3>🎁 Toʻyona Roʻyxati</h3>
+        </div>
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input type="text" id="toyona-search" placeholder="Ism boʻyicha qidirish..." />
+        </div>
+        <div id="toyona-list" class="toyona-list"></div>
+      </div>
+    </section>
+
+    <!-- =========== YANGILIKLAR =========== -->
+    <section class="page" id="page-news">
+      <div class="page-pad">
+        <div class="section-title">
+          <h3>📰 Yangiliklar</h3>
+        </div>
+        <div id="news-list" class="news-list"></div>
+      </div>
+    </section>
+
+    <!-- =========== BOTTOM NAVIGATION =========== -->
+    <nav class="bottom-nav">
+      <button class="nav-btn active" data-page="home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        <span>Asosiy</span>
+      </button>
+      <button class="nav-btn" data-page="osh">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 010 18M12 3a15 15 0 000 18"/></svg>
+        <span>Osh</span>
+      </button>
+      <button class="nav-btn" data-page="fond">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        <span>Fond</span>
+      </button>
+      <button class="nav-btn" data-page="toyona">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
+        <span>Toʻyona</span>
+      </button>
+      <button class="nav-btn" data-page="news">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8V6z"/></svg>
+        <span>Yangilik</span>
+      </button>
+    </nav>
+  </main>
+
+  <!-- =========== MEMBER DETAIL MODAL =========== -->
+  <div id="member-modal" class="modal hidden">
+    <div class="modal-overlay" data-close="member-modal"></div>
+    <div class="modal-content member-modal-content">
+      <button class="modal-close" data-close="member-modal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <div id="member-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- =========== TOAST =========== -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- ?v= versiya — kod o'zgarganda APP_VERSION bilan birga oshiring -->
+  <script src="js/config.js?v=2.0.0"></script>
+  <script src="js/data.js?v=2.0.0"></script>
+  <script src="js/app.js?v=2.0.0"></script>
+
+  <!-- =========== SERVICE WORKER =========== -->
+  <!-- Statik fayllar (rasm, css, js) keshlanadi (tez ochiladi va offline ishlaydi),
+       Google Sheets ma'lumotlari esa HAR DOIM tarmoqdan (yangi) olinadi.
+       Kod o'zgarsa SW yangilanadi va saytga qayta kirilganda yangi versiya ko'rinadi. -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').then(reg => {
+          // Yangi versiya topilsa — darhol yangilash
+          reg.addEventListener('updatefound', () => {
+            const nw = reg.installing;
+            if (!nw) return;
+            nw.addEventListener('statechange', () => {
+              if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+                // Yangi statik fayllar tayyor — keyingi yuklashda avtomatik ko'rinadi
+                console.log('Yangi versiya o’rnatildi. Sahifa qayta yuklanganda faollashadi.');
+              }
+            });
+          });
+        }).catch(err => console.warn('SW register xato:', err));
+
+        // Yangi SW boshqaruvni olganda sahifani bir marta avtomatik yangilash
+        let _reloaded = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (_reloaded) return;
+          _reloaded = true;
+          location.reload();
+        });
+      });
+    }
+  </script>
+</body>
+</html>
