@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <title>Estalik uchun — Galereya</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=2.2.0" />
+</head>
+<body class="gallery-body">
+
+  <!-- =========== HEADER =========== -->
+  <header class="gallery-header">
+    <button class="gallery-back" onclick="window.location.href='index.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+    </button>
+    <div class="gallery-title-wrap">
+      <h1>📸 Estalik uchun</h1>
+      <p id="gallery-subtitle">Yuklanmoqda...</p>
+    </div>
+    <button class="gallery-refresh" id="gallery-refresh-btn" title="Yangilash">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M23 4v6h-6M1 20v-6h6"/>
+        <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+      </svg>
+    </button>
+  </header>
+
+  <!-- =========== CATEGORY TABS =========== -->
+  <div id="gallery-tabs" class="gallery-tabs"></div>
+
+  <!-- =========== LOADER =========== -->
+  <div id="gallery-loader" class="gallery-loader">
+    <div class="loader-circle"></div>
+    <p>Rasmlar yuklanmoqda...</p>
+  </div>
+
+  <!-- =========== MASONRY GRID =========== -->
+  <main id="gallery-content" class="gallery-content"></main>
+
+  <!-- =========== IMAGE LIGHTBOX =========== -->
+  <div id="lightbox" class="lightbox hidden">
+    <button class="lightbox-close" id="lightbox-close" title="Yopish">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <button class="lightbox-download" id="lightbox-download" title="Yuklab olish">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      <span>Yuklab olish</span>
+    </button>
+    <div class="lightbox-counter" id="lightbox-counter">1 / 1</div>
+    <button class="lightbox-nav lightbox-prev" id="lightbox-prev">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <button class="lightbox-nav lightbox-next" id="lightbox-next">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+    <img id="lightbox-img" src="" alt="" />
+  </div>
+
+  <!-- =========== TOAST =========== -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="js/config.js?v=2.2.0"></script>
+  <script src="js/data.js?v=2.2.0"></script>
+  <script>
+    /* ============================================================
+       GALLERY PAGE — Estalik uchun
+       ============================================================ */
+    const Gallery = {
+      data: [],                // [{category, images:[urls]}]
+      currentCategory: null,   // tanlangan kategoriya nomi
+      lightboxList: [],        // ochiq kategoriyaning rasmlari
+      lightboxIdx: 0,
+
+      async init() {
+        await this.load();
+        this.bindEvents();
+      },
+
+      async load(force = false) {
+        const loader = document.getElementById('gallery-loader');
+        const content = document.getElementById('gallery-content');
+        loader.classList.remove('hidden');
+        content.classList.add('hidden');
+        try {
+          if (force) Storage.remove('sheet_' + CONFIG.SHEETS.gallery.gid);
+          this.data = await DataService.getGallery();
+        } catch (e) {
+          console.error(e);
+          showToast('Galereyani yuklashda xato', 'error');
+          this.data = [];
+        }
+        loader.classList.add('hidden');
+        content.classList.remove('hidden');
+
+        // Subtitle
+        const totalImgs = this.data.reduce((s, c) => s + c.images.length, 0);
+        document.getElementById('gallery-subtitle').textContent =
+          this.data.length === 0
+            ? 'Hech qanday rasm topilmadi'
+            : `${this.data.length} kategoriya • ${totalImgs} ta rasm`;
+
+        // Default: birinchi kategoriyani tanlaymiz
+        if (!this.currentCategory || !this.data.find(c => c.category === this.currentCategory)) {
+          this.currentCategory = this.data[0] ? this.data[0].category : null;
+        }
+        this.renderTabs();
+        this.renderGrid();
+      },
+
+      renderTabs() {
+        const wrap = document.getElementById('gallery-tabs');
+        if (this.data.length === 0) {
+          wrap.innerHTML = '';
+          return;
+        }
+        wrap.innerHTML = this.data.map(c => `
+          <button class="g-tab ${c.category === this.currentCategory ? 'active' : ''}"
+                  data-cat="${escapeAttr(c.category)}">
+            <span class="g-tab-name">${escapeHTML(c.category)}</span>
+            <span class="g-tab-count">${c.images.length}</span>
+          </button>
+        `).join('');
+        wrap.querySelectorAll('.g-tab').forEach(b => {
+          b.addEventListener('click', () => {
+            this.currentCategory = b.dataset.cat;
+            this.renderTabs();
+            this.renderGrid();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          });
+        });
+      },
+
+      renderGrid() {
+        const box = document.getElementById('gallery-content');
+        if (this.data.length === 0) {
+          box.innerHTML = `
+            <div class="gallery-empty">
+              <div class="emoji">📭</div>
+              <h3>Hozircha rasm yo'q</h3>
+              <p>Google Sheets dagi <b>6-varaq</b>ga A ustun — kategoriya nomi, B ustun — rasm URL'ini kiriting</p>
+            </div>`;
+          return;
+        }
+        const cat = this.data.find(c => c.category === this.currentCategory);
+        if (!cat) { box.innerHTML = ''; return; }
+        this.lightboxList = cat.images.slice();
+
+        // Masonry: ikkita ustun (CSS columns), rasmlar tabiiy balandlikda
+        box.innerHTML = `
+          <div class="gallery-cat-title">
+            <h2>${escapeHTML(cat.category)}</h2>
+            <span>${cat.images.length} ta rasm</span>
+          </div>
+          <div class="masonry">
+            ${cat.images.map((url, i) => `
+              <div class="masonry-item" data-idx="${i}">
+                <img src="${escapeAttr(url)}" loading="lazy"
+                     onerror="this.parentNode.classList.add('img-error');this.parentNode.innerHTML='<div class=\\'img-err-msg\\'>⚠️<br>Yuklanmadi</div>'"/>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        box.querySelectorAll('.masonry-item').forEach(it => {
+          it.addEventListener('click', () => {
+            if (it.classList.contains('img-error')) return;
+            const idx = parseInt(it.dataset.idx, 10);
+            this.openLightbox(idx);
+          });
+        });
+      },
+
+      openLightbox(idx) {
+        this.lightboxIdx = idx;
+        const lb = document.getElementById('lightbox');
+        lb.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        this.updateLightbox();
+        try { history.pushState({ lightbox: true }, '', '#lightbox'); } catch(e) {}
+      },
+
+      closeLightbox() {
+        const lb = document.getElementById('lightbox');
+        lb.classList.add('hidden');
+        document.body.style.overflow = '';
+      },
+
+      updateLightbox() {
+        const url = this.lightboxList[this.lightboxIdx];
+        document.getElementById('lightbox-img').src = url || '';
+        document.getElementById('lightbox-counter').textContent =
+          `${this.lightboxIdx + 1} / ${this.lightboxList.length}`;
+        // prev/next ko'rinishi
+        document.getElementById('lightbox-prev').style.opacity =
+          this.lightboxIdx > 0 ? '1' : '0.3';
+        document.getElementById('lightbox-next').style.opacity =
+          this.lightboxIdx < this.lightboxList.length - 1 ? '1' : '0.3';
+      },
+
+      next() {
+        if (this.lightboxIdx < this.lightboxList.length - 1) {
+          this.lightboxIdx++;
+          this.updateLightbox();
+        }
+      },
+      prev() {
+        if (this.lightboxIdx > 0) {
+          this.lightboxIdx--;
+          this.updateLightbox();
+        }
+      },
+
+      async download() {
+        const url = this.lightboxList[this.lightboxIdx];
+        if (!url) return;
+        const cat = this.currentCategory || 'rasm';
+        const filename = `${cat}_${this.lightboxIdx + 1}.jpg`.replace(/\s+/g, '_');
+        showToast('Yuklab olinmoqda...', '');
+        try {
+          // Avval CORS bilan blob orqali urinib ko'ramiz
+          const resp = await fetch(url, { mode: 'cors' });
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          const blob = await resp.blob();
+          const blobUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+          showToast('Yuklab olindi ✅', 'success');
+        } catch (e) {
+          // Fallback: yangi tabda ochib qo'yamiz (foydalanuvchi qo'lda saqlaydi)
+          console.warn('Direct download failed, opening in new tab', e);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          a.target = '_blank';
+          a.rel = 'noopener';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          showToast('Rasm yangi oynada ochildi', '');
+        }
+      },
+
+      bindEvents() {
+        document.getElementById('gallery-refresh-btn').addEventListener('click', () => {
+          const btn = document.getElementById('gallery-refresh-btn');
+          btn.classList.add('spinning');
+          this.load(true).finally(() => {
+            setTimeout(() => btn.classList.remove('spinning'), 400);
+          });
+        });
+
+        document.getElementById('lightbox-close').addEventListener('click', () => this.closeLightbox());
+        document.getElementById('lightbox-download').addEventListener('click', () => this.download());
+        document.getElementById('lightbox-prev').addEventListener('click', () => this.prev());
+        document.getElementById('lightbox-next').addEventListener('click', () => this.next());
+
+        // Lightbox tashqarisini bosish — yopadi
+        document.getElementById('lightbox').addEventListener('click', (e) => {
+          if (e.target.id === 'lightbox') this.closeLightbox();
+        });
+
+        // Klaviatura: arrow va Escape
+        document.addEventListener('keydown', (e) => {
+          if (document.getElementById('lightbox').classList.contains('hidden')) return;
+          if (e.key === 'Escape') this.closeLightbox();
+          if (e.key === 'ArrowRight') this.next();
+          if (e.key === 'ArrowLeft') this.prev();
+        });
+
+        // Swipe lightbox ichida
+        let touchStartX = 0, touchStartY = 0;
+        const lb = document.getElementById('lightbox');
+        lb.addEventListener('touchstart', (e) => {
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        lb.addEventListener('touchend', (e) => {
+          const dx = e.changedTouches[0].clientX - touchStartX;
+          const dy = e.changedTouches[0].clientY - touchStartY;
+          if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+            if (dx < 0) this.next();
+            else this.prev();
+          } else if (dy > 80 && Math.abs(dy) > Math.abs(dx)) {
+            // pastga surish — yopish
+            this.closeLightbox();
+          }
+        }, { passive: true });
+
+        // Brauzerning orqaga tugmasi — lightbox yopilsin
+        window.addEventListener('popstate', () => {
+          const lbEl = document.getElementById('lightbox');
+          if (!lbEl.classList.contains('hidden')) {
+            lbEl.classList.add('hidden');
+            document.body.style.overflow = '';
+          }
+        });
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => Gallery.init());
+  </script>
+</body>
+</html>

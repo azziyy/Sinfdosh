@@ -13,17 +13,18 @@
    (yoki index.html / config.js dagi APP_VERSION bilan bir xil tuting).
    ============================================================ */
 
-const CACHE_VERSION = '2.1.0';
+const CACHE_VERSION = '2.2.0';
 const CACHE_NAME = `jamoa-static-${CACHE_VERSION}`;
 
 // Oldindan keshlanadigan asosiy fayllar (ilova qobig'i / app shell)
 const PRECACHE_URLS = [
   './',
   './index.html',
-  './css/style.css?v=2.0.0',
-  './js/config.js?v=2.0.0',
-  './js/data.js?v=2.0.0',
-  './js/app.js?v=2.0.0',
+  './gallery.html',
+  './css/style.css?v=2.2.0',
+  './js/config.js?v=2.2.0',
+  './js/data.js?v=2.2.0',
+  './js/app.js?v=2.2.0',
   './manifest.json'
 ];
 

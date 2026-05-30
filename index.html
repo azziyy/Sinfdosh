@@ -18,7 +18,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- ?v= versiya — CONFIG.APP_VERSION bilan bir xil. Stilni o'zgartirganda
        config.js dagi APP_VERSION va bu yerdagi v= raqamini oshiring. -->
-  <link rel="stylesheet" href="css/style.css?v=2.1.0" />
+  <link rel="stylesheet" href="css/style.css?v=2.2.0" />
 </head>
 <body>
 
@@ -143,6 +143,26 @@
             <p id="welcome-text">Jamoa boshqaruv tizimiga kirdingiz</p>
           </div>
           <div class="welcome-emoji">🎉</div>
+        </div>
+
+        <!-- =========== TEZ KIRISH (CAROUSEL) =========== -->
+        <div class="quick-actions" id="quick-actions">
+          <a href="gallery.html" class="qa-btn qa-1">
+            <div class="qa-icon">📸</div>
+            <div class="qa-label">Estalik uchun</div>
+          </a>
+          <button class="qa-btn qa-2" data-action="random">
+            <div class="qa-icon">🎲</div>
+            <div class="qa-label">Random</div>
+          </button>
+          <button class="qa-btn qa-3" data-action="credit">
+            <div class="qa-icon">💳</div>
+            <div class="qa-label">Kredit kalkulyator</div>
+          </button>
+          <button class="qa-btn qa-4" data-action="weather">
+            <div class="qa-icon">⛅</div>
+            <div class="qa-label">Ob-havo</div>
+          </button>
         </div>
 
         <div class="stats-grid">
@@ -311,6 +331,17 @@
     </nav>
   </main>
 
+  <!-- =========== QUICK ACTION MODAL (Random / Credit / Weather) =========== -->
+  <div id="action-modal" class="modal hidden">
+    <div class="modal-overlay" data-close="action-modal"></div>
+    <div class="modal-content action-modal-content">
+      <button class="modal-close" data-close="action-modal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <div id="action-modal-body"></div>
+    </div>
+  </div>
+
   <!-- =========== MEMBER DETAIL MODAL =========== -->
   <div id="member-modal" class="modal hidden">
     <div class="modal-overlay" data-close="member-modal"></div>
@@ -326,9 +357,9 @@
   <div id="toast" class="toast hidden"></div>
 
   <!-- ?v= versiya — kod o'zgarganda APP_VERSION bilan birga oshiring -->
-  <script src="js/config.js?v=2.1.0"></script>
-  <script src="js/data.js?v=2.1.0"></script>
-  <script src="js/app.js?v=2.1.0"></script>
+  <script src="js/config.js?v=2.2.0"></script>
+  <script src="js/data.js?v=2.2.0"></script>
+  <script src="js/app.js?v=2.2.0"></script>
 
   <!-- =========== SERVICE WORKER =========== -->
   <!-- Statik fayllar (rasm, css, js) keshlanadi (tez ochiladi va offline ishlaydi),
