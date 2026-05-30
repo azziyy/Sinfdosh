@@ -278,10 +278,14 @@ const App = {
     // 6. So'nggi yangilik
     if (this.data.news.length > 0) {
       const last = this.data.news[0];
+      // Yangilik rasmi: agar mavjud bo'lsa story ichida ko'rsatamiz
+      const imgHTML = last.image
+        ? `<img src="${escapeAttr(last.image)}" class="story-news-img" onerror="this.style.display='none'"/>`
+        : `<div class="emoji">📰</div>`;
       stories.push({
         bg: 'bg-6',
         content: `
-          <div class="emoji">📰</div>
+          ${imgHTML}
           <h2>${escapeHTML(last.title)}</h2>
           <p>${escapeHTML(last.content.substring(0, 200))}${last.content.length > 200 ? '...' : ''}</p>
         `
@@ -424,6 +428,224 @@ const App = {
     document.getElementById('header-user').addEventListener('click', () => {
       if (this.currentUser) this.showMemberModal(this.currentUser.name);
     });
+
+    // Tez kirish (quick actions) tugmalari
+    document.querySelectorAll('.qa-btn[data-action]').forEach(btn => {
+      btn.addEventListener('click', () => this.handleQuickAction(btn.dataset.action));
+    });
+  },
+
+  // =============== TEZ KIRISH (QUICK ACTIONS) ===============
+  handleQuickAction(action) {
+    if (action === 'random') return this.showRandomMember();
+    if (action === 'credit') return this.showCreditCalculator();
+    if (action === 'weather') return this.showWeather();
+  },
+
+  openActionModal(html) {
+    const body = document.getElementById('action-modal-body');
+    if (!body) return;
+    body.innerHTML = html;
+    const modal = document.getElementById('action-modal');
+    modal.classList.remove('hidden');
+    try { history.pushState({ app: 'jamoa', type: 'modal', id: 'action-modal' }, '', '#action'); } catch (e) {}
+    // Yopish tugmalari
+    modal.querySelectorAll('[data-close="action-modal"]').forEach(el => {
+      el.onclick = () => modal.classList.add('hidden');
+    });
+  },
+
+  // --- 1) Random a'zo ---
+  showRandomMember() {
+    if (!this.data.members.length) {
+      showToast('Aʼzolar yoʼq', 'error');
+      return;
+    }
+    const pick = () => this.data.members[Math.floor(Math.random() * this.data.members.length)];
+    let m = pick();
+    const render = () => {
+      const bdate = parseDate(m.birthday);
+      const age = bdate ? calcAge(bdate) : null;
+      this.openActionModal(`
+        <div style="text-align:center">
+          <div class="random-badge">🎲 Tasodifiy aʼzo</div>
+          ${m.image
+            ? `<img src="${escapeAttr(m.image)}" class="mm-avatar" onerror="this.outerHTML='<div class=\\'member-avatar mm-avatar\\'>${escapeAttr(getInitials(m.name))}</div>'"/>`
+            : `<div class="member-avatar mm-avatar">${escapeHTML(getInitials(m.name))}</div>`}
+          <h2 class="mm-name">${escapeHTML(m.name)}</h2>
+          ${m.birthday ? `<div class="mm-info">🎂 ${escapeHTML(m.birthday)}${age ? ` • ${age} yosh` : ''}</div>` : ''}
+          ${m.phone ? `<div class="mm-info">📱 <a href="tel:${escapeAttr(m.phone)}" style="color:var(--accent);text-decoration:none">${escapeHTML(m.phone)}</a></div>` : ''}
+          <div style="display:flex;gap:10px;margin-top:24px">
+            <button id="random-again" class="btn-primary" style="flex:1">🎲 Yana boshqa</button>
+            <button id="random-details" class="btn-primary" style="flex:1;background:linear-gradient(135deg,var(--green),#059669);box-shadow:0 8px 20px rgba(16,185,129,0.4)">👤 Profil</button>
+          </div>
+        </div>
+      `);
+      const again = document.getElementById('random-again');
+      const details = document.getElementById('random-details');
+      if (again) again.onclick = () => { m = pick(); render(); };
+      if (details) details.onclick = () => {
+        document.getElementById('action-modal').classList.add('hidden');
+        this.showMemberModal(m.name);
+      };
+    };
+    render();
+  },
+
+  // --- 2) Kredit kalkulyator (annuitet) ---
+  showCreditCalculator() {
+    this.openActionModal(`
+      <div>
+        <div style="text-align:center;margin-bottom:18px">
+          <div style="font-size:48px">💳</div>
+          <h2 class="mm-name">Kredit kalkulyator</h2>
+          <p class="mm-info">Oylik toʼlov va umumiy summani hisoblang</p>
+        </div>
+        <div class="cc-form">
+          <label>Kredit summasi (soʼm)</label>
+          <input type="number" id="cc-amount" inputmode="decimal" placeholder="10 000 000" value="10000000"/>
+          <label>Yillik foiz stavkasi (%)</label>
+          <input type="number" id="cc-rate" inputmode="decimal" placeholder="24" value="24" step="0.1"/>
+          <label>Muddati (oy)</label>
+          <input type="number" id="cc-months" inputmode="numeric" placeholder="12" value="12"/>
+          <button id="cc-calc" class="btn-primary" style="margin-top:12px">Hisoblash</button>
+        </div>
+        <div id="cc-result" class="cc-result hidden"></div>
+      </div>
+    `);
+    const calc = () => {
+      const P = Number(document.getElementById('cc-amount').value) || 0;
+      const annualRate = Number(document.getElementById('cc-rate').value) || 0;
+      const n = Math.max(1, parseInt(document.getElementById('cc-months').value, 10) || 0);
+      const r = (annualRate / 100) / 12; // oylik foiz
+      let monthly, total, overpay;
+      if (r === 0) {
+        monthly = P / n;
+      } else {
+        monthly = P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+      }
+      total = monthly * n;
+      overpay = total - P;
+      const box = document.getElementById('cc-result');
+      box.classList.remove('hidden');
+      box.innerHTML = `
+        <div class="cc-row"><span>Oylik toʼlov</span><strong class="green">${formatMoney(Math.round(monthly))}</strong></div>
+        <div class="cc-row"><span>Umumiy toʼlov</span><strong>${formatMoney(Math.round(total))}</strong></div>
+        <div class="cc-row"><span>Ortiqcha toʼlov</span><strong class="orange">${formatMoney(Math.round(overpay))}</strong></div>
+        <div class="cc-row"><span>Muddat</span><strong>${n} oy</strong></div>
+      `;
+    };
+    document.getElementById('cc-calc').onclick = calc;
+    // Avtomatik hisoblash boshlang'ich qiymatlar uchun
+    calc();
+  },
+
+  // --- 3) Ob-havo (Farg'ona va Marg'ilon) ---
+  async showWeather() {
+    this.openActionModal(`
+      <div>
+        <div style="text-align:center;margin-bottom:18px">
+          <div style="font-size:48px">⛅</div>
+          <h2 class="mm-name">Ob-havo</h2>
+          <p class="mm-info">Fargʼona va Margʼilon shaharlari</p>
+        </div>
+        <div id="weather-cards" class="weather-cards">
+          <div class="weather-loading">
+            <div class="loader-circle" style="width:36px;height:36px"></div>
+            <p style="margin-top:10px;color:var(--muted)">Yuklanmoqda...</p>
+          </div>
+        </div>
+      </div>
+    `);
+    try {
+      const cities = [
+        { name: 'Fargʼona', lat: 40.3864, lon: 71.7864, emoji: '🏙️' },
+        { name: 'Margʼilon', lat: 40.4711, lon: 71.7244, emoji: '🏛️' }
+      ];
+      const fetchOne = async (c) => {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTashkent&forecast_days=3`;
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        return { ...c, data: await resp.json() };
+      };
+      const results = await Promise.all(cities.map(fetchOne));
+      const html = results.map(r => this.renderWeatherCard(r)).join('');
+      const box = document.getElementById('weather-cards');
+      if (box) box.innerHTML = html;
+    } catch (e) {
+      console.error('weather error', e);
+      const box = document.getElementById('weather-cards');
+      if (box) {
+        box.innerHTML = `
+          <div class="empty-state">
+            <div class="emoji">📡</div>
+            <p>Ob-havoni yuklab boʼlmadi. Internetni tekshiring.</p>
+          </div>`;
+      }
+    }
+  },
+
+  // Open-Meteo weather code → emoji + matn
+  weatherCodeInfo(code) {
+    const map = {
+      0:  ['☀️', 'Quyoshli'],
+      1:  ['🌤️', 'Asosan ochiq'],
+      2:  ['⛅', 'Qisman bulutli'],
+      3:  ['☁️', 'Bulutli'],
+      45: ['🌫️', 'Tuman'],
+      48: ['🌫️', 'Tuman (sovuq)'],
+      51: ['🌦️', 'Yengil shivalama'],
+      53: ['🌦️', 'Shivalama'],
+      55: ['🌧️', 'Quyuq shivalama'],
+      61: ['🌦️', 'Yengil yomgʼir'],
+      63: ['🌧️', 'Yomgʼir'],
+      65: ['🌧️', 'Kuchli yomgʼir'],
+      71: ['🌨️', 'Yengil qor'],
+      73: ['❄️', 'Qor'],
+      75: ['❄️', 'Kuchli qor'],
+      77: ['🌨️', 'Qor uchqunlari'],
+      80: ['🌦️', 'Yengil jala'],
+      81: ['🌧️', 'Jala'],
+      82: ['⛈️', 'Kuchli jala'],
+      95: ['⛈️', 'Momaqaldiroq'],
+      96: ['⛈️', 'Momaqaldiroq + doʼl'],
+      99: ['⛈️', 'Kuchli momaqaldiroq']
+    };
+    return map[code] || ['🌤️', '—'];
+  },
+
+  renderWeatherCard(r) {
+    const cur = r.data.current || {};
+    const daily = r.data.daily || {};
+    const [emoji, descr] = this.weatherCodeInfo(cur.weather_code);
+    const days = (daily.time || []).map((d, i) => {
+      const [em, ds] = this.weatherCodeInfo(daily.weather_code[i]);
+      const dt = new Date(d);
+      const dayName = i === 0 ? 'Bugun' : (i === 1 ? 'Ertaga' : dt.toLocaleDateString('uz-UZ', { weekday: 'short' }));
+      return `
+        <div class="w-day">
+          <span class="w-day-name">${dayName}</span>
+          <span class="w-day-emoji">${em}</span>
+          <span class="w-day-temp">${Math.round(daily.temperature_2m_max[i])}° / ${Math.round(daily.temperature_2m_min[i])}°</span>
+        </div>`;
+    }).join('');
+    return `
+      <div class="weather-card">
+        <div class="w-header">
+          <div>
+            <div class="w-city">${r.emoji} ${escapeHTML(r.name)}</div>
+            <div class="w-descr">${descr}</div>
+          </div>
+          <div class="w-emoji">${emoji}</div>
+        </div>
+        <div class="w-temp">${Math.round(cur.temperature_2m)}°<span>C</span></div>
+        <div class="w-meta">
+          <span>🌡️ His etiladi: <b>${Math.round(cur.apparent_temperature)}°</b></span>
+          <span>💧 Namlik: <b>${cur.relative_humidity_2m}%</b></span>
+          <span>💨 Shamol: <b>${Math.round(cur.wind_speed_10m)} km/h</b></span>
+        </div>
+        <div class="w-days">${days}</div>
+      </div>`;
   },
 
   // =============== MA'LUMOTLARNI YANGILASH ===============
@@ -675,6 +897,9 @@ const App = {
     document.getElementById('stat-bday').textContent =
       upcoming[0] ? upcoming[0].name.split(' ')[0] : '—';
 
+    // Stat card matnlari sig'masa avtomatik yonga skrol (marquee) qilamiz
+    setTimeout(() => this.applyStatMarquee(), 60);
+
     // News
     const newsBox = document.getElementById('home-news');
     if (this.data.news.length === 0) {
@@ -711,6 +936,17 @@ const App = {
         c.addEventListener('click', () => this.showMemberModal(c.dataset.name));
       });
     }
+  },
+
+  // Stat card sig'masa marquee animatsiyasini qo'shadi
+  applyStatMarquee() {
+    document.querySelectorAll('.stat-info strong').forEach(el => {
+      el.classList.remove('marquee');
+      // Matn parent kengligidan kattami?
+      if (el.scrollWidth > el.clientWidth + 2) {
+        el.classList.add('marquee');
+      }
+    });
   },
 
   // =============== OSH ===============

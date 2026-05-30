@@ -135,6 +135,29 @@ const DataService = {
     }));
   },
 
+  // GALEREYA (Estalik uchun) — A ustun: Kategoriya nomi, B ustun: Rasm URL
+  // Kategoriya bo'yicha guruhlanadi.
+  async getGallery() {
+    const { rows } = await this.fetchSheet(CONFIG.SHEETS.gallery.gid);
+    const grouped = {};
+    let currentCategory = null;
+    rows.forEach(r => {
+      const cat = String(r[0] || '').trim();
+      const url = String(r[1] || '').trim();
+      if (cat) {
+        currentCategory = cat;
+        if (!grouped[currentCategory]) grouped[currentCategory] = [];
+      }
+      // Faqat haqiqiy rasm URL bo'lsa qo'shamiz (header so'zlarini chiqarib tashlaymiz)
+      if (currentCategory && url && /^https?:\/\//i.test(url)) {
+        grouped[currentCategory].push(url);
+      }
+    });
+    return Object.entries(grouped)
+      .filter(([cat, images]) => images.length > 0)
+      .map(([category, images]) => ({ category, images }));
+  },
+
   // YANGILIKLAR
   async getNews() {
     const { rows } = await this.fetchSheet(CONFIG.SHEETS.news.gid);
