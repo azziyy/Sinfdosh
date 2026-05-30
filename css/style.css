@@ -742,10 +742,37 @@ svg { width: 1em; height: 1em; }
 .stat-orange::before { background: var(--orange); }
 .stat-purple::before { background: var(--purple); }
 
-.stat-icon { font-size: 28px; }
-.stat-info { display: flex; flex-direction: column; min-width: 0; flex: 1; }
-.stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
-.stat-info strong { font-size: 17px; font-weight: 700; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stat-icon { font-size: 24px; flex-shrink: 0; }
+.stat-info { display: flex; flex-direction: column; min-width: 0; flex: 1; overflow: hidden; }
+.stat-label {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Yozuv kichikroq qilindi va sig'masa avtomatik yonga skrol bo'ladi (marquee) */
+.stat-info strong {
+  font-size: 14px;
+  font-weight: 700;
+  margin-top: 2px;
+  white-space: nowrap;
+  display: block;
+  position: relative;
+  overflow: hidden;
+}
+.stat-info strong.marquee {
+  animation: stat-marquee 9s linear infinite;
+}
+@keyframes stat-marquee {
+  0%   { transform: translateX(0); }
+  15%  { transform: translateX(0); }
+  85%  { transform: translateX(calc(-100% + 100px)); }
+  100% { transform: translateX(calc(-100% + 100px)); }
+}
+.stat-card { padding: 14px 12px; gap: 10px; }
 
 .home-news {
   display: flex;
@@ -1409,4 +1436,472 @@ img.mm-avatar,
 .member-modal-content img.mm-avatar {
   max-width: 100%;
   box-sizing: border-box;
+}
+
+/* ============================================================
+   TEZ KIRISH (QUICK ACTIONS) — Carousel kartalar (Home page)
+   ============================================================ */
+.quick-actions {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 4px 14px;
+  margin: 0 -4px 16px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.quick-actions::-webkit-scrollbar { display: none; }
+.qa-btn {
+  flex: 0 0 auto;
+  width: 96px;
+  height: 96px;
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.2s;
+  text-decoration: none;
+  color: white;
+  border: 1px solid rgba(255,255,255,0.10);
+  scroll-snap-align: start;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+}
+.qa-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 70% 0%, rgba(255,255,255,0.18), transparent 60%);
+  pointer-events: none;
+}
+.qa-btn:active { transform: scale(0.95); }
+.qa-icon { font-size: 30px; line-height: 1; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3)); }
+.qa-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+  letter-spacing: 0.2px;
+}
+.qa-1 { background: linear-gradient(135deg, #ec4899, #be185d); }
+.qa-2 { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.qa-3 { background: linear-gradient(135deg, #10b981, #059669); }
+.qa-4 { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+
+/* ============================================================
+   ACTION MODAL (Random / Credit / Weather)
+   ============================================================ */
+.action-modal-content { max-width: 480px; }
+.random-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--orange), #d97706);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  box-shadow: 0 6px 14px rgba(245,158,11,0.4);
+}
+
+/* Credit calculator */
+.cc-form { display: flex; flex-direction: column; gap: 6px; }
+.cc-form label {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.cc-form input {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.cc-form input:focus { border-color: var(--accent); }
+.cc-result {
+  margin-top: 16px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--border);
+}
+.cc-row:last-child { border-bottom: none; }
+.cc-row span { color: var(--muted); font-size: 13px; }
+.cc-row strong { font-size: 15px; font-weight: 700; }
+.cc-row strong.green { color: var(--green); }
+.cc-row strong.orange { color: var(--orange); }
+
+/* Weather */
+.weather-cards { display: flex; flex-direction: column; gap: 14px; }
+.weather-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 0;
+}
+.weather-card {
+  background: linear-gradient(135deg, #1e3a8a, #312e81);
+  border-radius: 18px;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: white;
+  box-shadow: 0 10px 30px rgba(30,58,138,0.4);
+}
+.w-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+.w-city { font-size: 17px; font-weight: 700; }
+.w-descr { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 2px; }
+.w-emoji { font-size: 38px; line-height: 1; }
+.w-temp {
+  font-size: 52px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -1px;
+  margin: 8px 0 12px;
+}
+.w-temp span { font-size: 22px; font-weight: 600; opacity: 0.7; margin-left: 2px; }
+.w-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.8);
+  padding-bottom: 14px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+}
+.w-meta b { color: white; font-weight: 700; margin-left: 2px; }
+.w-days {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.w-day {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255,255,255,0.10);
+  padding: 10px 6px;
+  border-radius: 12px;
+  text-align: center;
+}
+.w-day-name { font-size: 11px; opacity: 0.85; text-transform: uppercase; }
+.w-day-emoji { font-size: 22px; line-height: 1; }
+.w-day-temp { font-size: 11px; font-weight: 700; }
+
+/* ============================================================
+   STORY NEWS IMAGE (yangiliklar splash slayd uchun)
+   ============================================================ */
+.story-news-img {
+  width: 100%;
+  max-width: 320px;
+  max-height: 200px;
+  height: auto;
+  object-fit: cover;
+  border-radius: 18px;
+  margin-bottom: 16px;
+  border: 3px solid rgba(255,255,255,0.25);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.4);
+}
+
+/* ============================================================
+   GALLERY PAGE (gallery.html)
+   ============================================================ */
+.gallery-body {
+  background: var(--bg);
+  min-height: 100vh;
+  padding-bottom: 30px;
+}
+.gallery-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(11,18,32,0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  padding-top: calc(14px + env(safe-area-inset-top, 0));
+  border-bottom: 1px solid var(--border);
+}
+.gallery-back,
+.gallery-refresh {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  flex-shrink: 0;
+}
+.gallery-back svg, .gallery-refresh svg { width: 20px; height: 20px; }
+.gallery-back:active, .gallery-refresh:active { transform: scale(0.95); }
+.gallery-refresh.spinning svg { animation: spin 0.8s linear infinite; }
+.gallery-title-wrap {
+  flex: 1;
+  min-width: 0;
+}
+.gallery-title-wrap h1 {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gallery-title-wrap p {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* Tabs */
+.gallery-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.gallery-tabs::-webkit-scrollbar { display: none; }
+.g-tab {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.g-tab.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-color: transparent;
+  box-shadow: 0 6px 14px var(--accent-glow);
+}
+.g-tab-count {
+  background: rgba(255,255,255,0.18);
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.g-tab.active .g-tab-count { background: rgba(255,255,255,0.25); }
+
+.gallery-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 20px;
+  gap: 14px;
+}
+.gallery-loader p { color: var(--muted); font-size: 14px; }
+
+.gallery-content { padding: 12px 12px 30px; }
+.gallery-cat-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 8px 4px 14px;
+}
+.gallery-cat-title h2 {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+.gallery-cat-title span { font-size: 12px; color: var(--muted); }
+
+/* MASONRY: 2 ustun (rasm 3 ga o'xshash) */
+.masonry {
+  column-count: 2;
+  column-gap: 8px;
+}
+@media (min-width: 600px) {
+  .masonry { column-count: 3; }
+}
+@media (min-width: 900px) {
+  .masonry { column-count: 4; }
+}
+.masonry-item {
+  break-inside: avoid;
+  margin-bottom: 8px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--card);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.15s, box-shadow 0.2s;
+}
+.masonry-item:active { transform: scale(0.97); }
+.masonry-item img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  background: var(--bg-soft);
+}
+.masonry-item.img-error {
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-soft);
+}
+.img-err-msg {
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+  padding: 14px;
+  line-height: 1.5;
+}
+
+.gallery-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 28px;
+  text-align: center;
+}
+.gallery-empty .emoji { font-size: 64px; margin-bottom: 16px; }
+.gallery-empty h3 { font-size: 18px; margin-bottom: 8px; }
+.gallery-empty p { color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+/* ============================================================
+   LIGHTBOX (rasm kattalashtirish modali)
+   ============================================================ */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0,0,0,0.96);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 16px;
+  animation: fadeIn 0.2s;
+}
+.lightbox img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.lightbox-close {
+  position: absolute;
+  top: env(safe-area-inset-top, 12px);
+  margin-top: 16px;
+  right: 16px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(12px);
+  z-index: 5;
+}
+.lightbox-close svg { width: 22px; height: 22px; }
+.lightbox-counter {
+  position: absolute;
+  top: env(safe-area-inset-top, 12px);
+  margin-top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(255,255,255,0.15);
+  padding: 6px 14px;
+  border-radius: 100px;
+  backdrop-filter: blur(10px);
+  z-index: 5;
+}
+.lightbox-download {
+  position: absolute;
+  bottom: calc(env(safe-area-inset-bottom, 12px) + 18px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: white;
+  padding: 12px 22px;
+  border-radius: 100px;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 10px 30px var(--accent-glow);
+  z-index: 5;
+}
+.lightbox-download:active { transform: translateX(-50%) scale(0.96); }
+.lightbox-download svg { width: 18px; height: 18px; }
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  z-index: 4;
+  transition: opacity 0.2s;
+}
+.lightbox-nav svg { width: 22px; height: 22px; }
+.lightbox-prev { left: 10px; }
+.lightbox-next { right: 10px; }
+
+@media (max-width: 480px) {
+  .lightbox-nav { width: 40px; height: 40px; }
+  .lightbox-prev { left: 6px; }
+  .lightbox-next { right: 6px; }
 }
