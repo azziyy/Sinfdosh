@@ -13,7 +13,7 @@
    (yoki index.html / config.js dagi APP_VERSION bilan bir xil tuting).
    ============================================================ */
 
-const CACHE_VERSION = '2.2.0';
+const CACHE_VERSION = '2.3.0';
 const CACHE_NAME = `jamoa-static-${CACHE_VERSION}`;
 
 // Oldindan keshlanadigan asosiy fayllar (ilova qobig'i / app shell)
@@ -21,10 +21,15 @@ const PRECACHE_URLS = [
   './',
   './index.html',
   './gallery.html',
-  './css/style.css?v=2.2.0',
-  './js/config.js?v=2.2.0',
-  './js/data.js?v=2.2.0',
-  './js/app.js?v=2.2.0',
+  './css/style.css?v=2.3.0',
+  './js/config.js?v=2.3.0',
+  './js/data.js?v=2.3.0',
+  './js/app.js?v=2.3.0',
+  './js/firebase-shared.js?v=2.3.0',
+  './games/index.html',
+  './games/aviator.html',
+  './games/dice.html',
+  './games/coinflip.html',
   './manifest.json'
 ];
 
@@ -57,12 +62,23 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Google Sheets (gviz) so'rovimi? — bu ma'lumot, hech qachon keshlanmaydi
+// Google Sheets (gviz) yoki Firebase so'rovimi? — bu ma'lumot, hech qachon keshlanmaydi
 function isSheetRequest(url) {
   return (
     url.hostname.includes('docs.google.com') ||
     url.pathname.includes('/gviz/tq') ||
     url.hostname.includes('googleusercontent.com')
+  );
+}
+
+// Firebase Realtime DB / Firebase API — hech qachon keshlanmaydi (real-time data)
+function isFirebaseRequest(url) {
+  return (
+    url.hostname.includes('firebaseio.com') ||
+    url.hostname.includes('firebasedatabase.app') ||
+    url.hostname.includes('googleapis.com') ||
+    url.hostname.includes('firebase-analytics') ||
+    url.hostname.includes('firebaseinstallations')
   );
 }
 
@@ -80,9 +96,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 1) GOOGLE SHEETS MA'LUMOTLARI → NETWORK-ONLY (hech qachon keshlanmaydi)
+  // 1) GOOGLE SHEETS / FIREBASE MA'LUMOTLARI → NETWORK-ONLY (hech qachon keshlanmaydi)
   //    Shu sababli yangi qo'shilgan ma'lumot doim yangi keladi.
-  if (isSheetRequest(url)) {
+  if (isSheetRequest(url) || isFirebaseRequest(url)) {
     event.respondWith(
       fetch(req).catch(() => new Response('', { status: 503 }))
     );
