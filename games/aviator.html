@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✈️ Aviator — Jamoa O'yinlari</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#08091a;--s1:#0f1226;--s2:#151830;--s3:#1c2040;
+  --green:#00e676;--red:#ff1744;--gold:#ffd740;--cyan:#00e5ff;
+  --white:#eef2ff;--muted:#5a6490;--border:rgba(255,255,255,0.07);
+}
+body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:var(--white);min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
+
+/* HEADER */
+.header{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--s1);border-bottom:1px solid var(--border);z-index:10;position:relative}
+.logo{font-family:'Orbitron',sans-serif;font-size:1.3rem;font-weight:900;letter-spacing:3px;color:var(--cyan);text-shadow:0 0 20px rgba(0,229,255,0.5);display:flex;align-items:center;gap:8px}
+.logo span{color:var(--red)}
+.balance-box{display:flex;align-items:center;gap:12px}
+.balance{background:var(--s3);border:1px solid var(--border);border-radius:8px;padding:6px 16px;font-size:1rem;font-weight:700;color:var(--gold);letter-spacing:1px}
+.balance label{font-size:0.65rem;color:var(--muted);display:block;letter-spacing:2px}
+.demo-badge{background:linear-gradient(135deg,#ff6b35,#f7c59f);color:#1a0a00;font-size:0.65rem;font-weight:700;letter-spacing:2px;padding:4px 10px;border-radius:20px}
+
+/* HISTORY */
+.history-strip{display:flex;align-items:center;gap:6px;padding:8px 16px;background:var(--s1);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.history-strip::-webkit-scrollbar{display:none}
+.hist-label{font-size:0.65rem;color:var(--muted);letter-spacing:2px;white-space:nowrap;margin-right:4px}
+.hist-pill{padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;white-space:nowrap;font-family:'Orbitron',sans-serif;letter-spacing:1px;transition:transform .2s}
+.hist-pill:hover{transform:scale(1.1)}
+.hist-pill.low{background:rgba(255,23,68,0.15);color:var(--red);border:1px solid rgba(255,23,68,0.3)}
+.hist-pill.mid{background:rgba(0,230,118,0.12);color:var(--green);border:1px solid rgba(0,230,118,0.25)}
+.hist-pill.high{background:rgba(255,215,64,0.12);color:var(--gold);border:1px solid rgba(255,215,64,0.3)}
+.hist-pill.mega{background:linear-gradient(135deg,rgba(0,229,255,0.2),rgba(180,0,255,0.2));color:var(--cyan);border:1px solid rgba(0,229,255,0.4);animation:pulse .8s infinite alternate}
+
+/* MAIN LAYOUT */
+.main-layout{display:flex;flex:1;overflow:hidden}
+
+/* LIVE BETS PANEL */
+.live-panel{width:220px;background:var(--s1);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.panel-title{padding:10px 14px;font-size:0.65rem;letter-spacing:2px;color:var(--muted);border-bottom:1px solid var(--border)}
+.live-list{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--s3) transparent}
+.live-list::-webkit-scrollbar{width:3px}
+.live-list::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px}
+.live-item{display:flex;align-items:center;justify-content:space-between;padding:7px 14px;border-bottom:1px solid var(--border);font-size:0.8rem;animation:slideIn .3s ease}
+.live-item .player{color:var(--muted);flex:1}
+.live-item .bet{color:var(--white);font-weight:600;width:60px;text-align:right}
+.live-item .cashout{font-weight:700;font-family:'Orbitron',sans-serif;font-size:0.7rem;width:55px;text-align:right}
+.live-item .cashout.win{color:var(--green)}
+.live-item .cashout.fly{color:var(--cyan);animation:pulse .5s infinite alternate}
+.live-item .cashout.lost{color:var(--red)}
+
+/* GAME CENTER */
+.game-center{flex:1;display:flex;flex-direction:column;position:relative}
+
+/* CANVAS */
+.canvas-wrapper{flex:1;position:relative;overflow:hidden;background:var(--bg)}
+canvas{width:100%;height:100%;display:block}
+.mult-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.mult-display{font-family:'Orbitron',sans-serif;font-size:4rem;font-weight:900;line-height:1;transition:color .3s;text-shadow:0 0 40px currentColor}
+.mult-display.flying{color:var(--white)}
+.mult-display.crashed{color:var(--red);animation:shake .2s}
+.mult-display.waiting{color:var(--cyan)}
+.mult-sub{font-size:0.85rem;letter-spacing:3px;margin-top:4px;opacity:0.6}
+.countdown-ring{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:130px;height:130px}
+.countdown-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.countdown-ring circle{fill:none;stroke-width:3;transition:stroke-dashoffset .9s linear}
+.countdown-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:1.8rem;font-weight:900;color:var(--cyan)}
+
+/* BET CONTROLS */
+.controls{background:var(--s1);border-top:1px solid var(--border);padding:14px 20px;display:flex;gap:14px;align-items:stretch}
+.bet-card{flex:1;background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.bet-card .card-title{font-size:0.65rem;letter-spacing:2px;color:var(--muted)}
+.amount-row{display:flex;align-items:center;gap:8px}
+.amount-input{background:var(--s3);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:700;padding:8px 12px;width:100%;text-align:center;outline:none;transition:border-color .2s}
+.amount-input:focus{border-color:var(--cyan)}
+.btn-adj{background:var(--s3);border:1px solid var(--border);border-radius:6px;color:var(--white);font-size:1.1rem;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.btn-adj:hover{background:var(--cyan);color:#000;border-color:var(--cyan)}
+.presets{display:flex;gap:4px;flex-wrap:wrap}
+.preset-btn{background:var(--s3);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:0.7rem;font-weight:700;padding:4px 8px;cursor:pointer;transition:all .15s}
+.preset-btn:hover{color:var(--white);border-color:var(--white)}
+.auto-row{display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--muted)}
+.auto-row input[type=number]{background:var(--s3);border:1px solid var(--border);border-radius:6px;color:var(--white);font-family:'Orbitron',sans-serif;font-size:0.75rem;padding:4px 8px;width:70px;outline:none;text-align:center}
+.auto-row label{display:flex;align-items:center;gap:6px;cursor:pointer}
+.toggle{width:32px;height:18px;background:var(--s3);border-radius:9px;position:relative;transition:background .2s;border:1px solid var(--border)}
+.toggle.on{background:var(--green)}
+.toggle::after{content:'';position:absolute;width:12px;height:12px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left .2s}
+.toggle.on::after{left:16px}
+
+.main-btn{width:100%;padding:14px;border:none;border-radius:10px;font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:700;letter-spacing:2px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.main-btn::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,0.1);opacity:0;transition:opacity .2s}
+.main-btn:hover::after{opacity:1}
+.main-btn:active{transform:scale(0.97)}
+.main-btn.bet{background:linear-gradient(135deg,#00c853,#00e676);color:#001a0a;box-shadow:0 4px 20px rgba(0,230,118,0.35)}
+.main-btn.cashout{background:linear-gradient(135deg,#ff6d00,#ff9100);color:#1a0700;box-shadow:0 4px 20px rgba(255,145,0,0.4);animation:cashout-pulse .6s infinite alternate}
+.main-btn.waiting{background:var(--s3);color:var(--muted);cursor:not-allowed}
+.main-btn.placed{background:linear-gradient(135deg,#c62828,#ef5350);color:#fff;box-shadow:0 4px 20px rgba(239,83,80,0.4)}
+.win-result{text-align:center;font-family:'Orbitron',sans-serif;font-size:0.85rem;font-weight:700;color:var(--green);animation:fadeUp .4s ease}
+.lose-result{text-align:center;font-family:'Orbitron',sans-serif;font-size:0.85rem;font-weight:700;color:var(--red);animation:fadeUp .4s ease}
+
+/* TOASTS */
+.toast-container{position:fixed;top:70px;right:20px;z-index:100;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{padding:10px 18px;border-radius:10px;font-weight:700;font-size:0.85rem;animation:toastIn .3s ease,toastOut .3s ease 1.7s forwards;backdrop-filter:blur(10px)}
+.toast.win{background:rgba(0,230,118,0.9);color:#001a0a}
+.toast.lose{background:rgba(255,23,68,0.85);color:#fff}
+.toast.info{background:rgba(0,229,255,0.85);color:#001a1a}
+
+/* ANIMATIONS */
+@keyframes pulse{0%{opacity:.7}100%{opacity:1}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes cashout-pulse{0%{box-shadow:0 4px 20px rgba(255,145,0,0.4)}100%{box-shadow:0 4px 30px rgba(255,145,0,0.8),0 0 0 4px rgba(255,145,0,0.15)}}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateX(20px)}}
+@keyframes crashText{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+
+/* RESPONSIVE */
+@media(max-width:700px){
+  .live-panel{display:none}
+  .controls{flex-direction:column}
+  .mult-display{font-size:2.8rem}
+  .countdown-ring{width:100px;height:100px}
+  .countdown-num{font-size:1.4rem}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <a href="index.html" class="logo" style="text-decoration:none;cursor:pointer" title="O'yinlar menyusiga">
+    <span style="color:var(--cyan);font-size:1.1rem">←</span>
+    <span>✈</span> AVIATOR
+  </a>
+  <div class="balance-box">
+    <div class="balance"><label>BALANS</label><span id="balanceDisplay">—</span> soʻm</div>
+    <div class="demo-badge" id="playerBadge" style="background:linear-gradient(135deg,#8b5cf6,#22d3ee);color:#fff">YUKLANMOQDA</div>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div class="history-strip">
+  <span class="hist-label">TARIX:</span>
+  <div id="historyContainer"></div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="main-layout">
+
+  <!-- LIVE BETS PANEL -->
+  <div class="live-panel">
+    <div class="panel-title">🔴 LIVE — O'YINCHILAR</div>
+    <div class="live-list" id="liveList"></div>
+  </div>
+
+  <!-- GAME CENTER -->
+  <div class="game-center">
+    <div class="canvas-wrapper">
+      <canvas id="gameCanvas"></canvas>
+      <div class="mult-overlay">
+        <!-- Waiting -->
+        <div id="waitingOverlay">
+          <div class="countdown-ring" id="countdownRing">
+            <svg viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="46" stroke="rgba(0,229,255,0.1)" stroke-width="3"/>
+              <circle id="cArc" cx="50" cy="50" r="46" stroke="#00e5ff" stroke-dasharray="289" stroke-dashoffset="289"/>
+            </svg>
+            <div class="countdown-num" id="countdownNum">5</div>
+          </div>
+          <div class="mult-sub" style="margin-top:12px;color:var(--cyan)">KEYINGI RAUND</div>
+        </div>
+        <!-- Flying -->
+        <div id="flyingOverlay" style="display:none;flex-direction:column;align-items:center">
+          <div class="mult-display flying" id="multDisplay">1.00×</div>
+          <div class="mult-sub" id="multSub">UCHIB KETMOQDA</div>
+        </div>
+        <!-- Crashed -->
+        <div id="crashedOverlay" style="display:none;flex-direction:column;align-items:center">
+          <div class="mult-display crashed" id="crashDisplay">0.00×</div>
+          <div class="mult-sub" style="color:var(--red)">QULAB TUSHDI!</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls">
+      <!-- BET CARD 1 -->
+      <div class="bet-card">
+        <div class="card-title">PANJA №1</div>
+        <div class="amount-row">
+          <button class="btn-adj" onclick="adjustBet(1,-50)">−</button>
+          <input class="amount-input" id="betInput1" type="number" value="100" min="10" max="50000">
+          <button class="btn-adj" onclick="adjustBet(1,50)">+</button>
+        </div>
+        <div class="presets">
+          <button class="preset-btn" onclick="setPreset(1,100)">100</button>
+          <button class="preset-btn" onclick="setPreset(1,500)">500</button>
+          <button class="preset-btn" onclick="setPreset(1,1000)">1K</button>
+          <button class="preset-btn" onclick="setPreset(1,5000)">5K</button>
+          <button class="preset-btn" onclick="setPreset(1,0)">½</button>
+          <button class="preset-btn" onclick="setPreset(1,-1)">×2</button>
+        </div>
+        <div class="auto-row">
+          <label><div class="toggle" id="autoToggle1" onclick="toggleAuto(1)"></div> Auto cashout</label>
+          <input type="number" id="autoTarget1" value="2.00" min="1.01" step="0.1" placeholder="2.00">×
+        </div>
+        <button class="main-btn bet" id="mainBtn1" onclick="handleMainBtn(1)">BET QILISH</button>
+        <div id="betResult1" style="min-height:20px"></div>
+      </div>
+
+      <!-- BET CARD 2 -->
+      <div class="bet-card">
+        <div class="card-title">PANJA №2</div>
+        <div class="amount-row">
+          <button class="btn-adj" onclick="adjustBet(2,-50)">−</button>
+          <input class="amount-input" id="betInput2" type="number" value="200" min="10" max="50000">
+          <button class="btn-adj" onclick="adjustBet(2,50)">+</button>
+        </div>
+        <div class="presets">
+          <button class="preset-btn" onclick="setPreset(2,100)">100</button>
+          <button class="preset-btn" onclick="setPreset(2,500)">500</button>
+          <button class="preset-btn" onclick="setPreset(2,1000)">1K</button>
+          <button class="preset-btn" onclick="setPreset(2,5000)">5K</button>
+          <button class="preset-btn" onclick="setPreset(2,0)">½</button>
+          <button class="preset-btn" onclick="setPreset(2,-1)">×2</button>
+        </div>
+        <div class="auto-row">
+          <label><div class="toggle" id="autoToggle2" onclick="toggleAuto(2)"></div> Auto cashout</label>
+          <input type="number" id="autoTarget2" value="5.00" min="1.01" step="0.1" placeholder="5.00">×
+        </div>
+        <button class="main-btn bet" id="mainBtn2" onclick="handleMainBtn(2)">BET QILISH</button>
+        <div id="betResult2" style="min-height:20px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ─────────────────────────────────────────────
+// AUDIO
+// ─────────────────────────────────────────────
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+function getAudio(){if(!audioCtx)audioCtx=new AudioCtx();return audioCtx}
+function beep(freq,dur,vol=0.05,type='sine'){
+  try{
+    const a=getAudio(),o=a.createOscillator(),g=a.createGain();
+    o.connect(g);g.connect(a.destination);
+    o.type=type;o.frequency.value=freq;
+    g.gain.setValueAtTime(vol,a.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,a.currentTime+dur);
+    o.start();o.stop(a.currentTime+dur);
+  }catch(e){}
+}
+function playTick(){beep(880,0.05,0.04)}
+function playWin(){beep(660,0.1,0.08);setTimeout(()=>beep(880,0.15,0.08),100);setTimeout(()=>beep(1100,0.2,0.08),220)}
+function playCrash(){beep(220,0.4,0.08,'sawtooth');setTimeout(()=>beep(110,0.5,0.06,'sawtooth'),200)}
+function playBet(){beep(500,0.08,0.05)}
+
+// ─────────────────────────────────────────────
+// GAME STATE
+// ─────────────────────────────────────────────
+const G = {
+  phase: 'waiting', // waiting|flying|crashed
+  countdown: 5,
+  cdMax: 5,
+  multiplier: 1.00,
+  crashPoint: 1,
+  startTime: 0,
+  balance: 10000,
+  history: [],
+  pathPoints: [],
+  explosionParticles: [],
+  stars: [],
+  bets: {
+    1: {active:false,cashedOut:false,amount:0,autoOn:false,autoTarget:2.0},
+    2: {active:false,cashedOut:false,amount:0,autoOn:false,autoTarget:5.0}
+  },
+  raf: null,
+  cdTimer: null,
+};
+
+// ─────────────────────────────────────────────
+// CRASH FORMULA
+// ─────────────────────────────────────────────
+function genCrash(){
+  // 1% chance of instant crash at 1.00x
+  if(Math.random() < 0.01) return 1.00;
+
+  // Correct formula: 0.97 / (1 - r)
+  // Distribution:
+  //   ~35% crash before 1.5x
+  //   ~51% crash before 2x
+  //   ~81% crash before 5x
+  //   ~90% crash before 10x
+  //    ~9% crash above 10x
+  const r = Math.random();
+  const v = 0.97 / (1 - r);
+  return Math.max(1.00, Math.min(Math.round(v * 100) / 100, 1000));
+}
+
+// ─────────────────────────────────────────────
+// CANVAS SETUP
+// ─────────────────────────────────────────────
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas(){
+  const w = canvas.parentElement.offsetWidth;
+  const h = canvas.parentElement.offsetHeight;
+  canvas.width = w * window.devicePixelRatio;
+  canvas.height = h * window.devicePixelRatio;
+  canvas.style.width = w+'px';
+  canvas.style.height = h+'px';
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  genStars(w,h);
+}
+window.addEventListener('resize', resizeCanvas);
+
+function genStars(w,h){
+  G.stars = [];
+  for(let i=0;i<120;i++){
+    G.stars.push({
+      x:Math.random()*w, y:Math.random()*h,
+      r:Math.random()*1.2+0.2, a:Math.random()
+    });
+  }
+}
+
+// ─────────────────────────────────────────────
+// COORDINATE TRANSFORMS  (fixed speed, scrolling window)
+// ─────────────────────────────────────────────
+function getW(){return canvas.width/devicePixelRatio}
+function getH(){return canvas.height/devicePixelRatio}
+const PAD = {l:50,r:30,t:30,b:50};
+
+// Always show exactly WINDOW_SECS seconds -- plane moves at constant px/sec
+const WINDOW_SECS = 22;
+
+function elapsed(){return (Date.now()-G.startTime)/1000}
+function nowSecs(){
+  if(G.phase==='flying') return elapsed();
+  return G.endElapsed||0;
+}
+
+function timeToX(t){
+  const W=getW();
+  const tWin=Math.max(0, nowSecs()-WINDOW_SECS);
+  return PAD.l + ((t-tWin)/WINDOW_SECS)*(W-PAD.l-PAD.r);
+}
+function multToY(m){
+  const H=getH();
+  const maxMult=Math.max(G.multiplier*1.7, 2.5);
+  const logMax=Math.log(maxMult);
+  const logM=Math.log(Math.max(m,1.0001));
+  return H - PAD.b - (logM/logMax)*(H-PAD.t-PAD.b);
+}
+
+// ─────────────────────────────────────────────
+// DRAW
+// ─────────────────────────────────────────────
+function draw(){
+  const W=getW(), H=getH();
+  ctx.clearRect(0,0,W,H);
+
+  // Background gradient
+  const bg=ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#08091a');
+  bg.addColorStop(1,'#0c0e1f');
+  ctx.fillStyle=bg;
+  ctx.fillRect(0,0,W,H);
+
+  // Stars
+  G.stars.forEach(s=>{
+    const tw = Date.now()/3000;
+    const a = 0.2+0.6*((Math.sin(tw+s.x)*0.5+0.5));
+    ctx.beginPath();
+    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(200,220,255,${a*s.a+0.1})`;
+    ctx.fill();
+  });
+
+  // Grid
+  ctx.strokeStyle='rgba(255,255,255,0.04)';
+  ctx.lineWidth=1;
+  for(let x=PAD.l;x<W-PAD.r;x+=(W-PAD.l-PAD.r)/8){
+    ctx.beginPath();ctx.moveTo(x,PAD.t);ctx.lineTo(x,H-PAD.b);ctx.stroke();
+  }
+  for(let y=PAD.t;y<H-PAD.b;y+=(H-PAD.t-PAD.b)/6){
+    ctx.beginPath();ctx.moveTo(PAD.l,y);ctx.lineTo(W-PAD.r,y);ctx.stroke();
+  }
+
+  // Y-axis labels - dynamic based on current multiplier
+  const maxMult=Math.max(G.multiplier*1.7,2.5);
+  ctx.fillStyle='rgba(255,255,255,0.25)';
+  ctx.font='11px Rajdhani';
+  ctx.textAlign='right';
+  const marks=[1,1.5,2,3,5,10,20,50,100,200,500].filter(v=>v<=maxMult*1.05);
+  marks.forEach(m=>{
+    const y=multToY(m);
+    if(y<PAD.t||y>getH()-PAD.b+4) return;
+    ctx.fillStyle='rgba(255,255,255,0.25)';
+    ctx.fillText(m+'×',PAD.l-6,y+4);
+    ctx.strokeStyle='rgba(255,255,255,0.06)';
+    ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(PAD.l,y);ctx.lineTo(W-PAD.r,y);ctx.stroke();
+  });
+
+  // Convert stored {t,mult} points to screen coords each frame (enables scrolling + dynamic Y)
+  const pts = G.pathPoints
+    .map(p=>({x:timeToX(p.t), y:multToY(p.mult)}))
+    .filter(p=>p.x >= PAD.l-4);
+
+  // Draw curve
+  if(pts.length > 1){
+    const crashed = G.phase==='crashed';
+    const color = crashed ? '#ff1744' : '#00e5ff';
+    const glowColor = crashed ? 'rgba(255,23,68,' : 'rgba(0,229,255,';
+
+    // Glow pass 1
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
+    ctx.strokeStyle=glowColor+'0.08)';
+    ctx.lineWidth=16;
+    ctx.lineCap='round';
+    ctx.lineJoin='round';
+    ctx.stroke();
+
+    // Glow pass 2
+    ctx.strokeStyle=glowColor+'0.2)';
+    ctx.lineWidth=8;
+    ctx.stroke();
+
+    // Fill gradient under curve
+    const grad=ctx.createLinearGradient(0,0,0,H);
+    grad.addColorStop(0,crashed?'rgba(255,23,68,0.15)':'rgba(0,229,255,0.12)');
+    grad.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.lineTo(pts[pts.length-1].x, H-PAD.b);
+    ctx.lineTo(pts[0].x, H-PAD.b);
+    ctx.closePath();
+    ctx.fillStyle=grad;
+    ctx.fill();
+
+    // Sharp line
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
+    ctx.strokeStyle=color;
+    ctx.lineWidth=2.5;
+    ctx.stroke();
+
+    // Plane at tip
+    if(G.phase!=='crashed' && pts.length>1){
+      const last=pts[pts.length-1];
+      const prev=pts[pts.length-2];
+      const angle=Math.atan2(last.y-prev.y,last.x-prev.x);
+      ctx.save();
+      ctx.translate(last.x,last.y);
+      ctx.rotate(angle);
+      ctx.shadowColor='#00e5ff';
+      ctx.shadowBlur=20;
+      ctx.font='22px serif';
+      ctx.textAlign='center';
+      ctx.textBaseline='middle';
+      ctx.fillText('✈',0,0);
+      ctx.restore();
+    }
+
+    // Explosion on crash
+    if(G.phase==='crashed' && pts.length>0){
+      const last=pts[pts.length-1];
+      ctx.save();
+      ctx.translate(last.x,last.y);
+      const t2=(Date.now()%600)/600;
+      for(let i=0;i<8;i++){
+        const a=i/8*Math.PI*2, r=20+t2*30;
+        ctx.beginPath();
+        ctx.arc(Math.cos(a)*r,Math.sin(a)*r,3*(1-t2),0,Math.PI*2);
+        ctx.fillStyle=`rgba(255,${50+i*20},0,${1-t2})`;
+        ctx.fill();
+      }
+      ctx.font='28px serif';
+      ctx.textAlign='center';
+      ctx.textBaseline='middle';
+      ctx.globalAlpha=0.9;
+      ctx.fillText('💥',0,0);
+      ctx.globalAlpha=1;
+      ctx.restore();
+    }
+  }
+
+  // Origin dot (only if still visible on screen)
+  const originX = timeToX(0);
+  if(originX >= PAD.l){
+    ctx.beginPath();
+    ctx.arc(originX,H-PAD.b,4,0,Math.PI*2);
+    ctx.fillStyle=G.phase==='crashed'?'#ff1744':'#00e5ff';
+    ctx.fill();
+  }
+} // end draw()
+
+// ─────────────────────────────────────────────
+// GAME LOOP
+// ─────────────────────────────────────────────
+function gameLoop(){
+  if(G.phase==='flying'){
+    const t = elapsed();
+    G.multiplier = Math.exp(0.07*t);
+
+    // Check crash
+    if(G.multiplier >= G.crashPoint){
+      G.multiplier = G.crashPoint;
+      crash();
+      return;
+    }
+
+    // Auto cashout check
+    [1,2].forEach(n=>{
+      const b=G.bets[n];
+      if(b.active && !b.cashedOut && b.autoOn){
+        if(G.multiplier >= b.autoTarget) doCashOut(n);
+      }
+    });
+
+    // Add path point — store time+mult, screen coords computed in draw()
+    const t_now = elapsed();
+    const last = G.pathPoints[G.pathPoints.length-1];
+    if(!last || t_now - last.t >= 0.05){
+      G.pathPoints.push({t: t_now, mult: G.multiplier});
+    }
+
+    // Update multiplier display
+    document.getElementById('multDisplay').textContent = G.multiplier.toFixed(2)+'×';
+    if(G.multiplier>=2 && Math.floor(G.multiplier*10)>Math.floor((G.multiplier-0.01)*10)) playTick();
+  }
+
+  draw();
+  G.raf = requestAnimationFrame(gameLoop);
+}
+
+// ─────────────────────────────────────────────
+// ROUND LIFECYCLE
+// ─────────────────────────────────────────────
+function startCountdown(){
+  G.phase='waiting';
+  G.countdown=G.cdMax;
+  G.pathPoints=[];
+  G.multiplier=1.00;
+  G.endElapsed=0;
+  G.crashPoint=genCrash();
+  [1,2].forEach(n=>{G.bets[n].cashedOut=false;});
+
+  // UI reset
+  showOverlay('waiting');
+  updateBetButtons();
+  document.getElementById('betResult1').innerHTML='';
+  document.getElementById('betResult2').innerHTML='';
+
+  const arc=document.getElementById('cArc');
+  const circumference=289;
+  arc.style.strokeDashoffset=0;
+
+  if(G.cdTimer) clearInterval(G.cdTimer);
+  G.cdTimer=setInterval(()=>{
+    G.countdown--;
+    document.getElementById('countdownNum').textContent=G.countdown;
+    arc.style.strokeDashoffset=(1-G.countdown/G.cdMax)*circumference;
+    if(G.countdown<=0){
+      clearInterval(G.cdTimer);
+      startRound();
+    }
+  },1000);
+
+  if(G.raf) cancelAnimationFrame(G.raf);
+  G.raf=requestAnimationFrame(gameLoop);
+}
+
+function startRound(){
+  G.phase='flying';
+  G.startTime=Date.now();
+  G.pathPoints=[];
+
+  // Deduct bets (Firebase-ga ham yoziladi)
+  [1,2].forEach(n=>{
+    const b=G.bets[n];
+    if(b.active){
+      b.amount=parseFloat(document.getElementById(`betInput${n}`).value)||100;
+      G.balance-=b.amount;
+      // Firebase: ayirish
+      if (window.__aviatorBet) window.__aviatorBet(b.amount);
+    }
+  });
+  updateBalance();
+
+  showOverlay('flying');
+  updateBetButtons();
+  updateFakePlayers();
+}
+
+function crash(){
+  G.phase='crashed';
+  G.multiplier=G.crashPoint;
+  playCrash();
+
+  // Save elapsed time so graph stays frozen correctly
+  G.endElapsed = Math.log(G.crashPoint) / 0.07;
+  // Push final exact crash point
+  G.pathPoints.push({t: G.endElapsed, mult: G.crashPoint});
+
+  // Lose all active non-cashed bets
+  [1,2].forEach(n=>{
+    const b=G.bets[n];
+    if(b.active && !b.cashedOut){
+      document.getElementById(`betResult${n}`).innerHTML=
+        `<div class="lose-result">−${fmt(b.amount)} soʻm</div>`;
+      showToast(`Bet ${n}: −${fmt(b.amount)} yo'qotdingiz!`,'lose');
+      // Firebase: yoʻqotuv (gameEnd, bet allaqachon olib qoʻyilgan)
+      if (window.__aviatorLoss) window.__aviatorLoss(b.amount);
+    }
+    b.active=false;
+  });
+
+  // History
+  G.history.unshift(G.crashPoint);
+  if(G.history.length>20) G.history.pop();
+  renderHistory();
+
+  showOverlay('crashed');
+  document.getElementById('crashDisplay').textContent=G.crashPoint.toFixed(2)+'×';
+  updateBetButtons();
+  updateFakePlayers();
+  draw();
+
+  setTimeout(startCountdown, 3000);
+}
+
+// ─────────────────────────────────────────────
+// CASHOUT
+// ─────────────────────────────────────────────
+function doCashOut(n){
+  const b=G.bets[n];
+  if(!b.active||b.cashedOut||G.phase!=='flying') return;
+  b.cashedOut=true;
+  b.active=false;
+  const win=b.amount*G.multiplier;
+  G.balance+=win;
+  updateBalance();
+  playWin();
+  // Firebase: yutuqni qoʻshish
+  if (window.__aviatorWin) window.__aviatorWin(b.amount, win, G.multiplier);
+  const profit=win-b.amount;
+  document.getElementById(`betResult${n}`).innerHTML=
+    `<div class="win-result">+${fmt(win)} soʻm (×${G.multiplier.toFixed(2)})</div>`;
+  showToast(`Bet ${n}: +${fmt(profit)} foyda! ×${G.multiplier.toFixed(2)}`,'win');
+  updateBetButtons();
+  updateFakePlayers();
+}
+
+// ─────────────────────────────────────────────
+// BET CONTROLS
+// ─────────────────────────────────────────────
+function handleMainBtn(n){
+  const b=G.bets[n];
+  if(G.phase==='waiting'){
+    if(b.active){b.active=false;updateBetButtons();return;}
+    const amt=parseFloat(document.getElementById(`betInput${n}`).value)||100;
+    if(amt<10){showToast('Minimum bet: 10 soʻm','info');return;}
+    if(amt>G.balance){showToast("Balansingiz yetarli emas!",'lose');return;}
+    b.active=true;
+    b.amount=amt;
+    playBet();
+    updateBetButtons();
+  } else if(G.phase==='flying'){
+    if(b.active && !b.cashedOut) doCashOut(n);
+  }
+}
+
+function adjustBet(n,delta){
+  const inp=document.getElementById(`betInput${n}`);
+  let v=parseFloat(inp.value)||100;
+  v=Math.max(10,Math.min(50000,v+delta));
+  inp.value=v;
+}
+function setPreset(n,val){
+  const inp=document.getElementById(`betInput${n}`);
+  if(val===0){inp.value=Math.max(10,Math.floor(parseFloat(inp.value)/2));}
+  else if(val===-1){inp.value=Math.min(50000,Math.floor(parseFloat(inp.value)*2));}
+  else inp.value=val;
+}
+function toggleAuto(n){
+  const b=G.bets[n];
+  b.autoOn=!b.autoOn;
+  const toggle=document.getElementById(`autoToggle${n}`);
+  toggle.classList.toggle('on',b.autoOn);
+}
+
+function updateBetButtons(){
+  [1,2].forEach(n=>{
+    const b=G.bets[n], btn=document.getElementById(`mainBtn${n}`);
+    btn.className='main-btn';
+    if(G.phase==='waiting'){
+      if(b.active){
+        btn.className+=' placed';
+        btn.textContent='❌ BEKOR QILISH';
+      } else {
+        btn.className+=' bet';
+        btn.textContent='BET QILISH';
+      }
+    } else if(G.phase==='flying'){
+      if(b.active && !b.cashedOut){
+        const mult=G.multiplier;
+        const win=b.amount*mult;
+        btn.className+=' cashout';
+        btn.textContent=`OLISH +${fmt(win)}`;
+      } else {
+        btn.className+=' waiting';
+        btn.textContent=b.cashedOut?'✅ OLINDI':'BET YO\'Q';
+      }
+    } else {
+      btn.className+=' waiting';
+      btn.textContent=b.active?'QULAB TUSHDI':'BET QO\'SHISH';
+    }
+  });
+  // Update auto targets
+  [1,2].forEach(n=>{
+    G.bets[n].autoTarget=parseFloat(document.getElementById(`autoTarget${n}`).value)||2;
+  });
+}
+
+// ─────────────────────────────────────────────
+// UI HELPERS
+// ─────────────────────────────────────────────
+function showOverlay(phase){
+  document.getElementById('waitingOverlay').style.display=phase==='waiting'?'flex':'none';
+  document.getElementById('flyingOverlay').style.display=phase==='flying'?'flex':'none';
+  document.getElementById('crashedOverlay').style.display=phase==='crashed'?'flex':'none';
+}
+
+function fmt(n){return Math.round(n).toLocaleString('ru-RU').replace(/,/g,' ')}
+function updateBalance(){
+  document.getElementById('balanceDisplay').textContent=fmt(G.balance);
+}
+
+function renderHistory(){
+  const c=document.getElementById('historyContainer');
+  c.innerHTML='';
+  G.history.slice(0,12).forEach(v=>{
+    const pill=document.createElement('div');
+    let cls='hist-pill ';
+    if(v<2) cls+='low';
+    else if(v<5) cls+='mid';
+    else if(v<10) cls+='high';
+    else cls+='mega';
+    pill.className=cls;
+    pill.textContent=v.toFixed(2)+'×';
+    c.appendChild(pill);
+  });
+}
+
+function showToast(msg,type='info'){
+  const tc=document.getElementById('toastContainer');
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.textContent=msg;
+  tc.appendChild(t);
+  setTimeout(()=>t.remove(),2100);
+}
+
+// ─────────────────────────────────────────────
+// FAKE PLAYERS
+// ─────────────────────────────────────────────
+const NAMES=['Jasur','Nodira','Bekzod','Malika','Sherzod','Dilnoza','Otabek','Kamola',
+  'Doniyor','Sabina','Ulugbek','Nafisa','Sardor','Zulfiya','Alisher','Mohira',
+  'Behruz','Feruza','Mirzo','Gulnora','Temur','Nozima','Sanjar','Barno'];
+
+function genFakeBets(){
+  return Array.from({length:12},(_,i)=>({
+    name:NAMES[Math.floor(Math.random()*NAMES.length)]+'**',
+    bet:Math.round((Math.random()*4900+100)/100)*100,
+    status:'fly',
+    cashoutAt:null,
+    willCashAt:(Math.random()<0.7) ? (1.1+Math.random()*4) : null
+  }));
+}
+
+let fakePlayers=genFakePlayers();
+function genFakePlayers(){return genFakeBets();}
+
+function updateFakePlayers(){
+  if(G.phase==='flying'){
+    fakePlayers.forEach(p=>{
+      if(p.status==='fly' && p.willCashAt && G.multiplier>=p.willCashAt){
+        p.status='win';
+        p.cashoutAt=G.multiplier;
+      }
+    });
+  } else if(G.phase==='crashed'){
+    fakePlayers.forEach(p=>{
+      if(p.status==='fly') p.status='lost';
+    });
+  } else if(G.phase==='waiting'){
+    fakePlayers=genFakePlayers();
+  }
+  renderLivePanel();
+}
+
+function renderLivePanel(){
+  const list=document.getElementById('liveList');
+  list.innerHTML='';
+  const sorted=[...fakePlayers].sort((a,b)=>b.bet-a.bet);
+  sorted.forEach(p=>{
+    const div=document.createElement('div');
+    div.className='live-item';
+    let cashHTML='';
+    if(p.status==='win') cashHTML=`<span class="cashout win">×${p.cashoutAt.toFixed(2)}</span>`;
+    else if(p.status==='lost') cashHTML=`<span class="cashout lost">×${G.crashPoint.toFixed(2)}</span>`;
+    else cashHTML=`<span class="cashout fly">UCHYAPTI</span>`;
+    div.innerHTML=`<span class="player">${p.name}</span><span class="bet">${fmt(p.bet)}</span>${cashHTML}`;
+    list.appendChild(div);
+  });
+}
+
+// ─────────────────────────────────────────────
+// FLYING MULTIPLIER DISPLAY UPDATE
+// ─────────────────────────────────────────────
+setInterval(()=>{
+  if(G.phase==='flying'){
+    updateBetButtons();
+    updateFakePlayers();
+  }
+},300);
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+window.addEventListener('load',()=>{
+  resizeCanvas();
+  // Seed history
+  G.history=[1.43,2.11,8.05,1.00,3.27,1.82,15.60,1.01,4.44,2.99];
+  renderHistory();
+  renderLivePanel();
+  // startCountdown faqat Firebase tayyor boʻlgandan keyin (yoki user yoʻq boʻlsa darhol)
+  if (window.__aviatorReady) {
+    startCountdown();
+  } else {
+    window.addEventListener('aviator:ready', () => startCountdown(), { once: true });
+    // 4 soniya kutib, baribir boshlash (offline holatda)
+    setTimeout(() => {
+      if (G.phase === 'waiting' && !G.cdTimer) startCountdown();
+    }, 4000);
+  }
+});
+</script>
+
+<!-- ===================== FIREBASE INTEGRATION ===================== -->
+<script type="module">
+import {
+  getCurrentUser, initUser, watchUser, changeBalance, logGame, fmtMoney
+} from '../js/firebase-shared.js?v=2.3.0';
+
+const user = getCurrentUser();
+
+function setBadge(text, color) {
+  const b = document.getElementById('playerBadge');
+  if (b) {
+    b.textContent = text;
+    if (color) b.style.background = color;
+  }
+}
+
+if (!user) {
+  setBadge('MEHMON', 'linear-gradient(135deg,#ef4444,#7f1d1d)');
+  // Mehmon — demo rejim, asliyat balansga taʼsir qilmaydi
+  G.balance = 10000;
+  updateBalance();
+  window.__aviatorBet  = () => {};
+  window.__aviatorWin  = () => {};
+  window.__aviatorLoss = () => {};
+  window.__aviatorReady = true;
+  window.dispatchEvent(new CustomEvent('aviator:ready'));
+  // Toast bilan ogohlantirish
+  setTimeout(() => showToast('Mehmon rejimi — yutuqlar saqlanmaydi! Tizimga kiring.', 'info'), 1500);
+} else {
+  // Avval init + kunlik bonus
+  (async () => {
+    try {
+      const res = await initUser(user.name);
+      G.balance = Number(res.data.balance) || 0;
+      updateBalance();
+      setBadge(user.name.toUpperCase().slice(0, 14), 'linear-gradient(135deg,#8b5cf6,#22d3ee)');
+
+      // Bonus xabari
+      if (res.bonusGiven) {
+        const isStart = res.data.gamesPlayed === 0;
+        const msg = isStart
+          ? `🎉 Boshlang'ich balans: ${fmtMoney(res.bonusAmount)} so'm`
+          : `🎁 Kunlik bonus: +${fmtMoney(res.bonusAmount)} so'm`;
+        showToast(msg, 'win');
+      }
+
+      // Real-time balans kuzatish (boshqa oʻyinlardan oʻzgarsa)
+      watchUser(user.name, (data) => {
+        if (!data) return;
+        // Faqat game flying emasligida sync qil (race condition oldini olish)
+        if (G.phase !== 'flying') {
+          G.balance = Number(data.balance) || 0;
+          updateBalance();
+        }
+      });
+
+      // Bet hook
+      window.__aviatorBet = async (amount) => {
+        try {
+          await changeBalance(user.name, -Math.abs(amount), { isBet: true });
+        } catch(e) { console.error('bet xato', e); }
+      };
+      // Win hook — yutuqni qoʻshish + log
+      window.__aviatorWin = async (bet, winAmount, mult) => {
+        try {
+          await changeBalance(user.name, +winAmount, { isWin: true, gameEnd: true });
+          await logGame(user.name, 'aviator', bet, winAmount, mult);
+        } catch(e) { console.error('win xato', e); }
+      };
+      // Loss hook — balans allaqachon kamaytirilgan, faqat gameEnd va log
+      window.__aviatorLoss = async (bet) => {
+        try {
+          // Faqat counter (balansga 0 qoʻshish lekin gameEnd++)
+          await changeBalance(user.name, 0, { gameEnd: true });
+          await logGame(user.name, 'aviator', bet, 0, 0);
+        } catch(e) { console.error('loss xato', e); }
+      };
+
+      window.__aviatorReady = true;
+      window.dispatchEvent(new CustomEvent('aviator:ready'));
+    } catch(e) {
+      console.error('Firebase init xato:', e);
+      setBadge('OFFLINE', 'linear-gradient(135deg,#ef4444,#7f1d1d)');
+      G.balance = 10000;
+      updateBalance();
+      window.__aviatorBet = window.__aviatorWin = window.__aviatorLoss = () => {};
+      window.__aviatorReady = true;
+      window.dispatchEvent(new CustomEvent('aviator:ready'));
+      showToast('Firebase ulanmadi — offline rejim', 'lose');
+    }
+  })();
+}
+</script>
+</body>
+</html>

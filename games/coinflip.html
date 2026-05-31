@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b1024">
+<title>🪙 Tanga — Jamoa O'yinlari</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
+:root{
+  --bg:#0b1024;--card:#171f4a;--card2:#1d2658;
+  --gold:#ffd740;--green:#22c55e;--red:#ef4444;
+  --accent:#8b5cf6;--accent2:#22d3ee;
+  --text:#eef2ff;--muted:#8b95c8;--border:rgba(255,255,255,0.08);
+}
+body{
+  background:
+    radial-gradient(1200px 600px at 80% -100px, rgba(139,92,246,0.20), transparent 60%),
+    radial-gradient(900px 500px at -100px 30%, rgba(34,211,238,0.12), transparent 60%),
+    var(--bg);
+  color:var(--text);min-height:100vh;
+}
+.header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;background:rgba(11,16,36,0.85);
+  backdrop-filter:blur(14px);position:sticky;top:0;z-index:30;
+  border-bottom:1px solid var(--border);
+}
+.back{
+  background:rgba(255,255,255,0.06);border:1px solid var(--border);
+  width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  color:var(--text);text-decoration:none;
+}
+.title{font-size:17px;font-weight:800}
+.balance{
+  background:linear-gradient(135deg,#ffd740,#ff9800);
+  padding:8px 14px;border-radius:14px;font-weight:800;color:#1a0a00;font-size:13px;
+}
+.wrap{max-width:480px;margin:0 auto;padding:20px 18px 40px}
+.coin-stage{
+  background:linear-gradient(160deg,var(--card2),var(--card));
+  border:1px solid var(--border);border-radius:24px;padding:30px 20px;
+  text-align:center;margin-bottom:18px;
+}
+.coin{
+  width:170px;height:170px;margin:10px auto 24px;border-radius:50%;
+  background:linear-gradient(135deg,#ffd740,#ff9800);
+  display:flex;align-items:center;justify-content:center;
+  font-size:80px;box-shadow:0 20px 50px rgba(255,152,0,0.45),inset 0 -10px 30px rgba(0,0,0,0.2);
+  transform-style:preserve-3d;transition:transform 0.1s;
+  position:relative;
+}
+.coin.flipping{animation:flip 2s cubic-bezier(0.4,0,0.2,1)}
+@keyframes flip{
+  0%{transform:rotateY(0) scale(1)}
+  50%{transform:rotateY(900deg) scale(1.1)}
+  100%{transform:rotateY(1800deg) scale(1)}
+}
+.coin.tails{background:linear-gradient(135deg,#cbd5e1,#64748b)}
+.result-text{font-size:20px;font-weight:800;min-height:32px;margin-bottom:8px}
+.result-text.win{color:var(--green)}
+.result-text.lose{color:var(--red)}
+.subtitle{color:var(--muted);font-size:13px;margin-bottom:8px}
+
+.bet-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:18px}
+.bet-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.bet-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.bet-input{
+  flex:1;min-width:140px;background:var(--card2);border:1px solid var(--border);
+  color:var(--text);padding:14px 16px;border-radius:14px;font-size:18px;font-weight:700;outline:none;
+}
+.bet-input:focus{border-color:var(--accent)}
+.preset{
+  background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);
+  padding:10px 14px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;
+}
+.preset:active{transform:scale(0.95)}
+.choice-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.choice{
+  padding:18px 12px;border-radius:16px;border:2px solid var(--border);
+  background:var(--card2);cursor:pointer;text-align:center;font-weight:800;
+  transition:all 0.18s;font-size:15px;
+}
+.choice .em{font-size:32px;display:block;margin-bottom:4px}
+.choice.active{
+  border-color:var(--gold);background:linear-gradient(135deg,rgba(255,215,64,0.18),rgba(255,152,0,0.10));
+  box-shadow:0 8px 24px rgba(255,152,0,0.20);
+}
+.flip-btn{
+  width:100%;padding:16px;border:none;border-radius:14px;
+  background:linear-gradient(135deg,var(--accent),#6d28d9);
+  color:#fff;font-weight:800;font-size:16px;cursor:pointer;letter-spacing:0.5px;
+  box-shadow:0 10px 24px rgba(139,92,246,0.35);
+}
+.flip-btn:active{transform:scale(0.98)}
+.flip-btn:disabled{opacity:0.5;cursor:not-allowed}
+.info-strip{
+  display:flex;gap:12px;justify-content:space-around;margin-top:14px;font-size:12px;color:var(--muted);
+}
+.info-strip strong{color:var(--text);display:block;font-size:14px;margin-top:2px}
+
+.toast{
+  position:fixed;left:50%;bottom:24px;transform:translateX(-50%);
+  background:rgba(0,0,0,0.85);color:#fff;padding:12px 20px;border-radius:14px;
+  font-weight:600;font-size:14px;z-index:200;opacity:0;transition:opacity 0.25s,transform 0.25s;
+  pointer-events:none;border:1px solid var(--border);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
+.toast.win{border-color:rgba(34,197,94,0.5)}
+.toast.lose{border-color:rgba(239,68,68,0.5)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html" class="back">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+  </a>
+  <div class="title">🪙 Tanga otish</div>
+  <div class="balance"><span id="bal">—</span> so'm</div>
+</div>
+
+<div class="wrap">
+  <div class="coin-stage">
+    <div class="coin" id="coin">🪙</div>
+    <div class="result-text" id="result">Yer yoki Bosh — tanlang!</div>
+    <div class="subtitle">Yutuq: ×1.95 (Uy haqqi: 2.5%)</div>
+  </div>
+
+  <div class="bet-card">
+    <div class="bet-label">Tanlovingiz</div>
+    <div class="choice-row">
+      <div class="choice active" data-side="heads">
+        <span class="em">👑</span> Bosh
+      </div>
+      <div class="choice" data-side="tails">
+        <span class="em">⚜️</span> Yer
+      </div>
+    </div>
+
+    <div class="bet-label">Stavka (so'm)</div>
+    <div class="bet-row">
+      <input class="bet-input" id="betInput" type="number" min="10" step="10" value="100">
+    </div>
+    <div class="bet-row">
+      <button class="preset" data-v="100">100</button>
+      <button class="preset" data-v="500">500</button>
+      <button class="preset" data-v="1000">1 000</button>
+      <button class="preset" data-v="5000">5 000</button>
+      <button class="preset" data-v="all">MAX</button>
+    </div>
+
+    <button class="flip-btn" id="flipBtn">🎯 Otish!</button>
+
+    <div class="info-strip">
+      <div>O'yinlar<strong id="games">0</strong></div>
+      <div>Yutuqlar<strong id="wins">0</strong></div>
+      <div>Mag'lub<strong id="losses">0</strong></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script type="module">
+import {
+  getCurrentUser, initUser, watchUser, changeBalance, logGame, fmtMoney
+} from '../js/firebase-shared.js?v=2.3.0';
+
+const $ = s => document.querySelector(s);
+function showToast(msg,type=''){
+  const t = $('#toast'); t.textContent = msg; t.className='toast '+type; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2400);
+}
+
+let balance = 0;
+let side = 'heads';
+let busy = false;
+let stats = { games: 0, wins: 0, losses: 0 };
+const user = getCurrentUser();
+
+function updBal(){ $('#bal').textContent = fmtMoney(balance); }
+function updStats(){
+  $('#games').textContent = stats.games;
+  $('#wins').textContent = stats.wins;
+  $('#losses').textContent = stats.losses;
+}
+
+// Choice
+document.querySelectorAll('.choice').forEach(c=>{
+  c.addEventListener('click',()=>{
+    document.querySelectorAll('.choice').forEach(x=>x.classList.remove('active'));
+    c.classList.add('active');
+    side = c.dataset.side;
+  });
+});
+
+// Presets
+document.querySelectorAll('.preset').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const v = b.dataset.v;
+    if (v === 'all') $('#betInput').value = Math.max(10, Math.floor(balance));
+    else $('#betInput').value = v;
+  });
+});
+
+async function flip(){
+  if (busy) return;
+  if (!user) { showToast('Tizimga kiring!', 'lose'); return; }
+  const bet = Math.floor(parseFloat($('#betInput').value) || 0);
+  if (bet < 10) { showToast("Minimum 10 so'm", 'lose'); return; }
+  if (bet > balance) { showToast('Balans yetarli emas!', 'lose'); return; }
+
+  busy = true;
+  $('#flipBtn').disabled = true;
+  $('#result').textContent = 'Aylanmoqda...';
+  $('#result').className = 'result-text';
+
+  // Bet ayirish
+  try { await changeBalance(user.name, -bet, { isBet: true }); }
+  catch(e) { busy=false; $('#flipBtn').disabled=false; showToast('Xato!','lose'); return; }
+
+  // Natija (49% yutuq ehtimoli — uy haqqi)
+  const win = Math.random() < 0.49;
+  const result = win ? side : (side === 'heads' ? 'tails' : 'heads');
+
+  // Animatsiya
+  const coin = $('#coin');
+  coin.classList.remove('flipping','tails');
+  void coin.offsetWidth; // reflow
+  coin.classList.add('flipping');
+  if (result === 'tails') setTimeout(()=>coin.classList.add('tails'), 1000);
+  coin.textContent = result === 'heads' ? '👑' : '⚜️';
+
+  setTimeout(async () => {
+    stats.games++;
+    if (win) {
+      const winAmount = Math.floor(bet * 1.95);
+      await changeBalance(user.name, +winAmount, { isWin: true, gameEnd: true });
+      await logGame(user.name, 'coinflip', bet, winAmount, 1.95);
+      stats.wins++;
+      $('#result').textContent = `🎉 Yutdingiz! +${fmtMoney(winAmount - bet)} so'm`;
+      $('#result').className = 'result-text win';
+      showToast(`+${fmtMoney(winAmount - bet)} so'm`, 'win');
+    } else {
+      await changeBalance(user.name, 0, { gameEnd: true });
+      await logGame(user.name, 'coinflip', bet, 0, 0);
+      stats.losses++;
+      $('#result').textContent = `😔 Mag'lubiyat! −${fmtMoney(bet)} so'm`;
+      $('#result').className = 'result-text lose';
+      showToast(`−${fmtMoney(bet)} so'm`, 'lose');
+    }
+    updStats();
+    coin.classList.remove('flipping');
+    busy = false;
+    $('#flipBtn').disabled = false;
+  }, 2000);
+}
+
+$('#flipBtn').addEventListener('click', flip);
+
+// Init
+if (!user) {
+  showToast('Tizimga kiring! Aks holda yutuqlar saqlanmaydi.', 'lose');
+  $('#bal').textContent = '0';
+} else {
+  (async () => {
+    try {
+      const res = await initUser(user.name);
+      balance = Number(res.data.balance) || 0;
+      updBal();
+      if (res.bonusGiven) {
+        showToast(`🎁 Bonus: +${fmtMoney(res.bonusAmount)} so'm`, 'win');
+      }
+      watchUser(user.name, (data) => {
+        if (!data) return;
+        balance = Number(data.balance) || 0;
+        updBal();
+      });
+    } catch(e) { console.error(e); showToast('Firebase xato!','lose'); }
+  })();
+}
+</script>
+</body>
+</html>
