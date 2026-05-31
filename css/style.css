@@ -1494,6 +1494,30 @@ img.mm-avatar,
 .qa-2 { background: linear-gradient(135deg, #f59e0b, #d97706); }
 .qa-3 { background: linear-gradient(135deg, #10b981, #059669); }
 .qa-4 { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.qa-games {
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  position: relative;
+}
+.qa-games::before {
+  content: '🌟';
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 12px;
+  animation: sparkle 1.6s infinite alternate;
+}
+@keyframes sparkle {
+  from { opacity: 0.4; transform: scale(0.9); }
+  to   { opacity: 1; transform: scale(1.15); }
+}
+.qa-balance {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #ffd740;
+  letter-spacing: 0.3px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  margin-top: 2px;
+}
 
 /* ============================================================
    ACTION MODAL (Random / Credit / Weather)
