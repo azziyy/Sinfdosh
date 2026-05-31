@@ -167,7 +167,7 @@ canvas{width:100%;height:100%;display:block}
               <circle cx="50" cy="50" r="46" stroke="rgba(0,229,255,0.1)" stroke-width="3"/>
               <circle id="cArc" cx="50" cy="50" r="46" stroke="#00e5ff" stroke-dasharray="289" stroke-dashoffset="289"/>
             </svg>
-            <div class="countdown-num" id="countdownNum">5</div>
+            <div class="countdown-num" id="countdownNum">10</div>
           </div>
           <div class="mult-sub" style="margin-top:12px;color:var(--cyan)">KEYINGI RAUND</div>
         </div>
@@ -191,7 +191,7 @@ canvas{width:100%;height:100%;display:block}
         <div class="card-title">PANJA №1</div>
         <div class="amount-row">
           <button class="btn-adj" onclick="adjustBet(1,-50)">−</button>
-          <input class="amount-input" id="betInput1" type="number" value="100" min="10" max="50000">
+          <input class="amount-input" id="betInput1" type="number" inputmode="numeric" pattern="[0-9]*" value="100" min="10" max="50000" step="1" onkeydown="return (event.ctrlKey||event.metaKey||event.key==='Backspace'||event.key==='Delete'||event.key==='Tab'||event.key==='ArrowLeft'||event.key==='ArrowRight'||event.key==='Home'||event.key==='End'||(event.key>='0'&&event.key<='9'))" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
           <button class="btn-adj" onclick="adjustBet(1,50)">+</button>
         </div>
         <div class="presets">
@@ -215,7 +215,7 @@ canvas{width:100%;height:100%;display:block}
         <div class="card-title">PANJA №2</div>
         <div class="amount-row">
           <button class="btn-adj" onclick="adjustBet(2,-50)">−</button>
-          <input class="amount-input" id="betInput2" type="number" value="200" min="10" max="50000">
+          <input class="amount-input" id="betInput2" type="number" inputmode="numeric" pattern="[0-9]*" value="200" min="10" max="50000" step="1" onkeydown="return (event.ctrlKey||event.metaKey||event.key==='Backspace'||event.key==='Delete'||event.key==='Tab'||event.key==='ArrowLeft'||event.key==='ArrowRight'||event.key==='Home'||event.key==='End'||(event.key>='0'&&event.key<='9'))" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
           <button class="btn-adj" onclick="adjustBet(2,50)">+</button>
         </div>
         <div class="presets">
@@ -266,8 +266,8 @@ function playBet(){beep(500,0.08,0.05)}
 // ─────────────────────────────────────────────
 const G = {
   phase: 'waiting', // waiting|flying|crashed
-  countdown: 5,
-  cdMax: 5,
+  countdown: 10,
+  cdMax: 10,   // Har raund oldidan 10 sekund kutish vaqti
   multiplier: 1.00,
   crashPoint: 1,
   startTime: 0,
@@ -861,7 +861,7 @@ window.addEventListener('load',()=>{
 <script type="module">
 import {
   getCurrentUser, initUser, watchUser, changeBalance, logGame, fmtMoney
-} from '../js/firebase-shared.js?v=2.3.0';
+} from '../js/firebase-shared.js?v=2.4.0';
 
 const user = getCurrentUser();
 

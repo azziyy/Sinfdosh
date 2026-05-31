@@ -141,7 +141,7 @@ body{
 
     <div class="bet-label">Stavka (so'm)</div>
     <div class="bet-row">
-      <input class="bet-input" id="betInput" type="number" min="10" step="10" value="100">
+      <input class="bet-input" id="betInput" type="number" inputmode="numeric" pattern="[0-9]*" min="10" step="1" value="100" onkeydown="return (event.ctrlKey||event.metaKey||event.key==='Backspace'||event.key==='Delete'||event.key==='Tab'||event.key==='ArrowLeft'||event.key==='ArrowRight'||event.key==='Home'||event.key==='End'||(event.key>='0'&&event.key<='9'))" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
     </div>
     <div class="bet-row">
       <button class="preset" data-v="100">100</button>
@@ -166,7 +166,7 @@ body{
 <script type="module">
 import {
   getCurrentUser, initUser, watchUser, changeBalance, logGame, fmtMoney
-} from '../js/firebase-shared.js?v=2.3.0';
+} from '../js/firebase-shared.js?v=2.4.0';
 
 const $ = s => document.querySelector(s);
 function showToast(msg,type=''){

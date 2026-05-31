@@ -76,6 +76,31 @@ body{
 .bonus-banner .em{font-size:22px}
 .bonus-banner strong{color:var(--green)}
 
+/* BONUS CARD (qo'lda olinadigan) */
+.bonus-card{
+  margin:0 18px 18px;
+  background:linear-gradient(135deg, rgba(255,215,64,0.15), rgba(255,152,0,0.08));
+  border:1px solid rgba(255,215,64,0.35);border-radius:18px;padding:16px;
+  display:flex;align-items:center;gap:14px;
+}
+.bonus-card .bc-emoji{font-size:36px;line-height:1;filter:drop-shadow(0 6px 14px rgba(255,152,0,0.45))}
+.bonus-card .bc-info{flex:1;min-width:0}
+.bonus-card .bc-title{font-size:14px;font-weight:800;margin-bottom:2px}
+.bonus-card .bc-sub{font-size:12px;color:var(--muted);line-height:1.45}
+.bonus-card .bc-sub strong{color:var(--gold)}
+.bonus-card .bc-sub .timer{color:var(--accent2);font-weight:800;font-variant-numeric:tabular-nums}
+.bc-btn{
+  background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border:none;
+  padding:11px 18px;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer;
+  box-shadow:0 6px 16px rgba(34,197,94,0.35);transition:transform 0.12s, box-shadow 0.2s, opacity 0.2s;
+  white-space:nowrap;
+}
+.bc-btn:active{transform:scale(0.96)}
+.bc-btn:disabled{
+  background:linear-gradient(135deg,#475569,#334155);
+  box-shadow:none;cursor:not-allowed;opacity:0.85;
+}
+
 /* SECTION TITLE */
 .section-title{
   display:flex;align-items:center;justify-content:space-between;
@@ -177,7 +202,7 @@ body{
   <!-- USER STRIP / LOGIN PROMPT -->
   <div id="user-area"></div>
 
-  <!-- BONUS BANNER (agar bonus berilsa) -->
+  <!-- BONUS CARD (kunlik bonusni qo'lda olish) -->
   <div id="bonus-area"></div>
 
   <!-- GAMES -->
@@ -208,7 +233,7 @@ body{
       </div>
     </a>
     <div class="game-card soon">
-      <span class="gc-tag">TEZDA</span>
+      <span class="gc-tag">TEZ ORADA</span>
       <div>
         <div class="gc-emoji">🎰</div>
         <div class="gc-title">Slots</div>
@@ -231,8 +256,9 @@ body{
 
 <script type="module">
 import {
-  getCurrentUser, initUser, watchUser, watchLeaderboard, fmtMoney, DAILY_BONUS, START_BALANCE
-} from '../js/firebase-shared.js?v=2.3.0';
+  getCurrentUser, initUser, watchUser, watchLeaderboard, fmtMoney,
+  DAILY_BONUS, START_BALANCE, claimDailyBonus, getBonusStatus, nextBonusInMs
+} from '../js/firebase-shared.js?v=2.4.0';
 
 function $(s){return document.querySelector(s)}
 function showToast(msg, type=''){
@@ -272,31 +298,101 @@ if (!user) {
     </div>
   `;
 
-  // Init user va kunlik bonus tekshirish
+  // Init user (faqat ro'yxatdan o'tkazish — bonus AVTOMATIK BERILMAYDI)
   (async () => {
     try {
       const res = await initUser(user.name);
-      if (res.bonusGiven) {
-        const isStart = res.data.gamesPlayed === 0 && res.bonusAmount === START_BALANCE;
-        const msg = isStart
-          ? `🎉 Tabriklaymiz! Sizga boshlang'ich balans: ${fmtMoney(res.bonusAmount)} so'm`
-          : `🎁 Kunlik bonus: +${fmtMoney(res.bonusAmount)} so'm`;
-        showToast(msg, 'success');
-        $('#bonus-area').innerHTML = `
-          <div class="bonus-banner">
-            <div class="em">${isStart ? '🎉' : '🎁'}</div>
-            <div>
-              ${isStart ? "Boshlang'ich balans" : 'Bugungi bonus'}: <strong>+${fmtMoney(res.bonusAmount)} so'm</strong><br>
-              <span style="color:var(--muted);font-size:11px">Har kuni ${fmtMoney(DAILY_BONUS)} so'm bepul!</span>
-            </div>
-          </div>
-        `;
+      // Yangi foydalanuvchi bo'lsa boshlang'ich balans haqida xabar
+      if (res && res.bonusGiven && res.data && res.data.gamesPlayed === 0) {
+        showToast(`🎉 Boshlang'ich balans: ${fmtMoney(res.bonusAmount)} so'm`, 'success');
       }
+      // Bonus kartochkasini render qilish va keyingi bonus uchun timer
+      await renderBonusCard();
     } catch(e) {
       console.error(e);
       showToast('Firebase ulanmadi — internetni tekshiring', '');
     }
   })();
+
+  // ========== BONUS KARTOCHKASI (qo'lda olish + timer) ==========
+  let bonusTimerId = null;
+
+  function formatRemaining(ms){
+    if (ms <= 0) return '00:00:00';
+    const s = Math.floor(ms/1000);
+    const h = String(Math.floor(s/3600)).padStart(2,'0');
+    const m = String(Math.floor((s%3600)/60)).padStart(2,'0');
+    const sec = String(s%60).padStart(2,'0');
+    return `${h}:${m}:${sec}`;
+  }
+
+  async function renderBonusCard(){
+    if (bonusTimerId) { clearInterval(bonusTimerId); bonusTimerId = null; }
+    const status = await getBonusStatus(user.name);
+    const area = $('#bonus-area');
+    if (!area) return;
+
+    if (status.available) {
+      // Bonusni olish mumkin
+      area.innerHTML = `
+        <div class="bonus-card" id="bonus-card">
+          <div class="bc-emoji">🎁</div>
+          <div class="bc-info">
+            <div class="bc-title">Kunlik bonus tayyor!</div>
+            <div class="bc-sub">Bugun: <strong>+${fmtMoney(DAILY_BONUS)} so'm</strong> — olishni unutmang</div>
+          </div>
+          <button class="bc-btn" id="claim-bonus-btn">Olish</button>
+        </div>
+      `;
+      const btn = $('#claim-bonus-btn');
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.textContent = 'Olinmoqda...';
+        try {
+          const r = await claimDailyBonus(user.name);
+          if (r.claimed) {
+            showToast(`🎁 +${fmtMoney(r.amount)} so'm balansga qo'shildi!`, 'success');
+          } else if (r.alreadyClaimed) {
+            showToast('Siz bugungi bonusni allaqachon olgansiz', '');
+          } else {
+            showToast('Bonus olishda xatolik', '');
+          }
+        } catch(e){
+          console.error(e);
+          showToast('Tarmoq xatoligi', '');
+          btn.disabled = false;
+          btn.textContent = 'Olish';
+          return;
+        }
+        // Holatni yangilash (timer ko'rsatish uchun)
+        await renderBonusCard();
+      });
+    } else {
+      // Keyingi bonusgacha taymer
+      area.innerHTML = `
+        <div class="bonus-card">
+          <div class="bc-emoji">⏳</div>
+          <div class="bc-info">
+            <div class="bc-title">Bugungi bonus olingan ✅</div>
+            <div class="bc-sub">Keyingi bonusgacha: <span class="timer" id="bonus-timer">--:--:--</span></div>
+          </div>
+          <button class="bc-btn" disabled>Olingan</button>
+        </div>
+      `;
+      const tEl = $('#bonus-timer');
+      const tick = () => {
+        const ms = nextBonusInMs();
+        if (tEl) tEl.textContent = formatRemaining(ms);
+        if (ms <= 0) {
+          clearInterval(bonusTimerId);
+          bonusTimerId = null;
+          renderBonusCard(); // qayta render — bonus tayyor bo'ldi
+        }
+      };
+      tick();
+      bonusTimerId = setInterval(tick, 1000);
+    }
+  }
 
   // Real-time balans
   watchUser(user.name, (data) => {
