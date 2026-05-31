@@ -2,7 +2,7 @@
 <html lang="uz">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>✈️ Aviator — Jamoa O'yinlari</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -15,7 +15,7 @@
 body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:var(--white);min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
 
 /* HEADER */
-.header{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--s1);border-bottom:1px solid var(--border);z-index:10;position:relative}
+.header{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;padding-top:calc(10px + env(safe-area-inset-top, 20px));background:var(--s1);border-bottom:1px solid var(--border);z-index:10;position:relative}
 .logo{font-family:'Orbitron',sans-serif;font-size:1.3rem;font-weight:900;letter-spacing:3px;color:var(--cyan);text-shadow:0 0 20px rgba(0,229,255,0.5);display:flex;align-items:center;gap:8px}
 .logo span{color:var(--red)}
 .balance-box{display:flex;align-items:center;gap:12px}
