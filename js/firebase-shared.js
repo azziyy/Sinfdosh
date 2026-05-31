@@ -71,7 +71,8 @@ async function initUser(name) {
     const now = Date.now();
     const today = todayStr();
     if (!cur) {
-      // Yangi foydalanuvchi
+      // Yangi foydalanuvchi — faqat boshlang'ich balans beriladi.
+      // Kunlik bonus AVTOMATIK BERILMAYDI — foydalanuvchi qo'lda "Olish" tugmasi orqali oladi.
       bonusGiven = true;
       bonusAmount = START_BALANCE;
       return {
@@ -80,19 +81,12 @@ async function initUser(name) {
         totalWon: 0,
         totalBet: 0,
         gamesPlayed: 0,
-        lastBonusDate: today,
+        lastBonusDate: '',   // hech qachon bonus olmagan — birinchi marta olishi mumkin
         createdAt: now,
         updatedAt: now
       };
     }
-    // Mavjud foydalanuvchi — kunlik bonus tekshirish
-    if (cur.lastBonusDate !== today) {
-      cur.balance = (cur.balance || 0) + DAILY_BONUS;
-      cur.lastBonusDate = today;
-      cur.updatedAt = now;
-      bonusGiven = true;
-      bonusAmount = DAILY_BONUS;
-    }
+    // Mavjud foydalanuvchi — bonus AVTOMATIK BERILMAYDI.
     // ism o'zgargan bo'lishi mumkin (katta/kichik harf)
     if (cur.name !== name) cur.name = name;
     return cur;
@@ -100,6 +94,59 @@ async function initUser(name) {
 
   const snap = await get(userRef);
   return { data: snap.val(), bonusGiven, bonusAmount, key };
+}
+
+/* =====================================================
+   KUNLIK BONUSNI QO'LDA OLISH
+   - Bugun olinmagan bo'lsa: balansga DAILY_BONUS qo'shadi
+   - Bugun olingan bo'lsa: { claimed:false, alreadyClaimed:true } qaytaradi
+   ===================================================== */
+async function claimDailyBonus(name) {
+  if (!name) return { claimed: false, reason: 'no-user' };
+  const key = userKey(name);
+  const userRef = ref(db, `users/${key}`);
+  let claimed = false;
+  let alreadyClaimed = false;
+  let amount = 0;
+
+  await runTransaction(userRef, (cur) => {
+    if (!cur) return cur;
+    const today = todayStr();
+    if (cur.lastBonusDate === today) {
+      alreadyClaimed = true;
+      return cur;
+    }
+    cur.balance = Math.floor((cur.balance || 0) + DAILY_BONUS);
+    cur.lastBonusDate = today;
+    cur.updatedAt = Date.now();
+    claimed = true;
+    amount = DAILY_BONUS;
+    return cur;
+  });
+
+  return { claimed, alreadyClaimed, amount };
+}
+
+/* === Keyingi bonusgacha qolgan vaqt (ms) === */
+function nextBonusInMs() {
+  const now = new Date();
+  const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
+  return Math.max(0, tomorrow.getTime() - now.getTime());
+}
+
+/* === Foydalanuvchining bonus holatini olish === */
+async function getBonusStatus(name) {
+  if (!name) return { available: false };
+  const key = userKey(name);
+  const snap = await get(ref(db, `users/${key}/lastBonusDate`));
+  const lastDate = snap.exists() ? snap.val() : '';
+  const today = todayStr();
+  const available = lastDate !== today;
+  return {
+    available,
+    lastBonusDate: lastDate,
+    nextInMs: available ? 0 : nextBonusInMs()
+  };
 }
 
 /* === Balansni olish === */
@@ -178,14 +225,19 @@ function watchUser(name, callback) {
 }
 
 /* === Pul formatlash === */
+// Faqat butun soʻm koʻrsatiladi (tiyin yo'q). Minglik ajratuvchi: bo'sh joy.
+// Misol: 737817 -> "737 817" (= 737 ming 817 soʻm)
 function fmtMoney(n) {
   if (n == null || isNaN(n)) return '0';
-  return Number(n).toLocaleString('ru-RU').replace(/,/g, ' ');
+  return Math.floor(Number(n)).toLocaleString('ru-RU').replace(/,/g, ' ');
 }
 
 /* === Global eksport (Firebase modulasi import bo'lmagan joylar uchun) === */
 window.GamesAPI = {
   initUser,
+  claimDailyBonus,
+  getBonusStatus,
+  nextBonusInMs,
   getBalance,
   changeBalance,
   watchBalance,
@@ -200,22 +252,20 @@ window.GamesAPI = {
 };
 
 // Sahifa yuklanganda current user uchun init qilish (agar bor bo'lsa)
+// MUHIM: Kunlik bonus AVTOMATIK berilmaydi — faqat foydalanuvchi qo'lda Bonuslar tugmasi orqali oladi.
+// Bu yerda faqat YANGI foydalanuvchiga boshlang'ich balans berilishi haqida xabar beriladi.
 (async () => {
   const u = getCurrentUser();
   if (u && u.name) {
     try {
       const res = await initUser(u.name);
-      if (res && res.bonusGiven && res.bonusAmount > 0) {
-        // Bonus xabari — agar showToast mavjud bo'lsa
-        const msg = res.data.gamesPlayed === 0 && res.bonusAmount === START_BALANCE
-          ? `🎁 Boshlangʻich balans: ${fmtMoney(res.bonusAmount)} soʻm`
-          : `🎁 Kunlik bonus: +${fmtMoney(res.bonusAmount)} soʻm`;
-        // toast yo'q bo'lishi mumkin — kichik delay
+      if (res && res.bonusGiven && res.bonusAmount > 0 && res.data && res.data.gamesPlayed === 0) {
+        // Faqat boshlang'ich balans xabari (yangi foydalanuvchilarga)
+        const msg = `🎁 Boshlangʻich balans: ${fmtMoney(res.bonusAmount)} soʻm`;
         setTimeout(() => {
           if (typeof window.showToast === 'function') {
             window.showToast(msg, 'success');
           } else {
-            // Custom event
             window.dispatchEvent(new CustomEvent('games:bonus', { detail: { msg, amount: res.bonusAmount }}));
           }
         }, 800);
@@ -226,7 +276,8 @@ window.GamesAPI = {
 })();
 
 export {
-  initUser, getBalance, changeBalance, watchBalance,
+  initUser, claimDailyBonus, getBonusStatus, nextBonusInMs,
+  getBalance, changeBalance, watchBalance,
   watchLeaderboard, watchUser, logGame, userKey, fmtMoney,
   getCurrentUser, DAILY_BONUS, START_BALANCE
 };
