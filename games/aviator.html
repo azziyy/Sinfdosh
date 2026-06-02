@@ -2,7 +2,7 @@
 <html lang="uz">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>✈️ Aviator — Jamoa O'yinlari</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -15,7 +15,7 @@
 body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:var(--white);min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
 
 /* HEADER */
-.header{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;padding-top:calc(10px + env(safe-area-inset-top, 20px));background:var(--s1);border-bottom:1px solid var(--border);z-index:10;position:relative}
+.header{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--s1);border-bottom:1px solid var(--border);z-index:10;position:relative}
 .logo{font-family:'Orbitron',sans-serif;font-size:1.3rem;font-weight:900;letter-spacing:3px;color:var(--cyan);text-shadow:0 0 20px rgba(0,229,255,0.5);display:flex;align-items:center;gap:8px}
 .logo span{color:var(--red)}
 .balance-box{display:flex;align-items:center;gap:12px}
@@ -288,19 +288,25 @@ const G = {
 // CRASH FORMULA
 // ─────────────────────────────────────────────
 function genCrash(){
-  // 1% chance of instant crash at 1.00x
+  // 1% ehtimol bilan darhol 1.00x da qulash (birdaniga portlash)
   if(Math.random() < 0.01) return 1.00;
 
-  // Correct formula: 0.97 / (1 - r)
-  // Distribution:
-  //   ~35% crash before 1.5x
-  //   ~51% crash before 2x
-  //   ~81% crash before 5x
-  //   ~90% crash before 10x
-  //    ~9% crash above 10x
+  // 5% ehtimol bilan "JACKPOT" zonasi: 50x dan 300x gacha
+  const jackpotChance = 0.05; // 5% – har 20 raundda ~1 marta yuqori ko'paytuvchi
+  if(Math.random() < jackpotChance) {
+    // 50.00x – 300.00x oralig'i (150x ham shu ichida)
+    const highMult = 50 + Math.random() * 250;
+    return Math.min(1000, Math.round(highMult * 100) / 100);
+  }
+
+  // Asosiy (oddiy) taqsimot – konstanta biroz oshirildi (0.97 → 0.98)
   const r = Math.random();
-  const v = 0.97 / (1 - r);
-  return Math.max(1.00, Math.min(Math.round(v * 100) / 100, 1000));
+  const c = 0.98;  // ilgari 0.97 edi
+  let v = c / (1 - r);
+  
+  // Multiplikatorni 1.00x dan kichik bo'lmasligi va 1000x dan oshmasligi uchun
+  v = Math.max(1.00, Math.min(1000, v));
+  return Math.round(v * 100) / 100;
 }
 
 // ─────────────────────────────────────────────
