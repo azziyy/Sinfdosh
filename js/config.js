@@ -28,7 +28,7 @@ const CONFIG = {
 
   // Ilova versiyasi — statik fayllar (css/js) o'zgarganda bu raqamni oshiring.
   // Service Worker va fayl havolalaridagi ?v= shu versiyaga bog'langan.
-  APP_VERSION: '2.4.0',
+  APP_VERSION: '2.5.0',
 
   // Cache muddati (ms) — ENDI bu faqat ZAXIRA (offline) uchun ishlatiladi.
   // Ma'lumotlar har doim avval tarmoqdan (network-first) olinadi, shuning uchun
