@@ -13,7 +13,7 @@
    (yoki index.html / config.js dagi APP_VERSION bilan bir xil tuting).
    ============================================================ */
 
-const CACHE_VERSION = '2.4.0';
+const CACHE_VERSION = '2.5.0';
 const CACHE_NAME = `jamoa-static-${CACHE_VERSION}`;
 
 // Oldindan keshlanadigan asosiy fayllar (ilova qobig'i / app shell)
@@ -21,15 +21,20 @@ const PRECACHE_URLS = [
   './',
   './index.html',
   './gallery.html',
-  './css/style.css?v=2.4.0',
-  './js/config.js?v=2.4.0',
-  './js/data.js?v=2.4.0',
-  './js/app.js?v=2.4.0',
-  './js/firebase-shared.js?v=2.4.0',
+  './css/style.css?v=2.5.0',
+  './js/config.js?v=2.5.0',
+  './js/data.js?v=2.5.0',
+  './js/app.js?v=2.5.0',
+  './js/firebase-shared.js?v=2.5.0',
   './games/index.html',
   './games/aviator.html',
   './games/dice.html',
   './games/coinflip.html',
+  './games/slots.html',
+  './games/mines.html',
+  './games/blackjack.html',
+  './games/wheel.html',
+  './games/rps.html',
   './manifest.json'
 ];
 

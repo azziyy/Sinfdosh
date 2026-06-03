@@ -362,15 +362,15 @@
   <div id="toast" class="toast hidden"></div>
 
   <!-- ?v= versiya — kod o'zgarganda APP_VERSION bilan birga oshiring -->
-  <script src="js/config.js?v=2.4.0"></script>
-  <script src="js/data.js?v=2.4.0"></script>
-  <script src="js/app.js?v=2.4.0"></script>
+  <script src="js/config.js?v=2.5.0"></script>
+  <script src="js/data.js?v=2.5.0"></script>
+  <script src="js/app.js?v=2.5.0"></script>
 
   <!-- Firebase Realtime DB — umumiy balans (o'yinlar uchun) -->
-  <script type="module" src="js/firebase-shared.js?v=2.4.0"></script>
+  <script type="module" src="js/firebase-shared.js?v=2.5.0"></script>
   <script type="module">
     // Asosiy sahifada balansni mini-koʻrsatish
-    import { watchUser, getCurrentUser, fmtMoney } from './js/firebase-shared.js?v=2.4.0';
+    import { watchUser, getCurrentUser, fmtMoney } from './js/firebase-shared.js?v=2.5.0';
     window.addEventListener('games:ready', () => {
       const u = getCurrentUser();
       if (!u) return;
