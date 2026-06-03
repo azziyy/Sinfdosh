@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b1024">
+<title>💣 Mines — Jamoa O'yinlari</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
+:root{
+  --bg:#0b1024;--card:#171f4a;--card2:#1d2658;
+  --gold:#ffd740;--green:#22c55e;--red:#ef4444;
+  --accent:#8b5cf6;--accent2:#22d3ee;
+  --text:#eef2ff;--muted:#8b95c8;--border:rgba(255,255,255,0.08);
+}
+body{
+  background:
+    radial-gradient(1200px 600px at 80% -100px, rgba(34,211,238,0.18), transparent 60%),
+    radial-gradient(900px 500px at -100px 30%, rgba(139,92,246,0.12), transparent 60%),
+    var(--bg);
+  color:var(--text);min-height:100vh;
+}
+.header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;padding-top:calc(14px + env(safe-area-inset-top,20px));
+  background:rgba(11,16,36,0.85);
+  backdrop-filter:blur(14px);position:sticky;top:0;z-index:30;border-bottom:1px solid var(--border);
+}
+.back{background:rgba(255,255,255,0.06);border:1px solid var(--border);width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--text);text-decoration:none}
+.title{font-size:17px;font-weight:800}
+.balance{background:linear-gradient(135deg,#ffd740,#ff9800);padding:8px 14px;border-radius:14px;font-weight:800;color:#1a0a00;font-size:13px}
+.wrap{max-width:480px;margin:0 auto;padding:20px 18px 40px}
+
+.stage{
+  background:linear-gradient(160deg,var(--card2),var(--card));border:1px solid var(--border);
+  border-radius:24px;padding:18px;margin-bottom:18px;
+}
+.top-info{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;
+  background:rgba(0,0,0,0.25);padding:12px 14px;border-radius:14px;
+}
+.ti-box{text-align:center;flex:1}
+.ti-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px}
+.ti-value{font-size:18px;font-weight:900;margin-top:2px}
+.ti-value.gold{color:var(--gold)}
+.ti-value.green{color:var(--green)}
+
+.grid-mines{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.tile{
+  aspect-ratio:1/1;border-radius:12px;background:linear-gradient(160deg,#2a3478,#1c2354);
+  border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+  font-size:28px;cursor:pointer;font-weight:900;
+  transition:transform 0.12s, background 0.2s;user-select:none;
+  box-shadow:inset 0 -3px 8px rgba(0,0,0,0.3);
+}
+.tile:active{transform:scale(0.95)}
+.tile.disabled{cursor:not-allowed;opacity:0.6}
+.tile.diamond{
+  background:linear-gradient(160deg,#22c55e,#15803d);
+  border-color:rgba(255,255,255,0.2);
+  box-shadow:0 6px 18px rgba(34,197,94,0.4);
+  animation:popIn 0.3s ease-out;
+}
+.tile.bomb{
+  background:linear-gradient(160deg,#ef4444,#7f1d1d);
+  border-color:#fca5a5;
+  box-shadow:0 6px 18px rgba(239,68,68,0.5);
+  animation:explode 0.4s ease-out;
+}
+.tile.bomb-hidden{
+  background:linear-gradient(160deg,#7f1d1d,#451010);opacity:0.5;
+}
+@keyframes popIn{
+  0%{transform:scale(0.4) rotate(-20deg)}
+  100%{transform:scale(1) rotate(0)}
+}
+@keyframes explode{
+  0%{transform:scale(0.5)}
+  50%{transform:scale(1.2)}
+  100%{transform:scale(1)}
+}
+
+.bet-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:18px}
+.bet-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.bet-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.bet-input{flex:1;min-width:140px;background:var(--card2);border:1px solid var(--border);color:var(--text);padding:14px 16px;border-radius:14px;font-size:18px;font-weight:700;outline:none}
+.preset{background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer}
+
+.mines-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.mine-opt{
+  padding:10px 6px;border-radius:12px;border:2px solid var(--border);background:var(--card2);
+  cursor:pointer;text-align:center;font-weight:800;font-size:13px;transition:all 0.18s;
+}
+.mine-opt.active{border-color:#ef4444;background:linear-gradient(135deg,rgba(239,68,68,0.2),rgba(239,68,68,0.05))}
+
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.start-btn{
+  padding:16px;border:none;border-radius:14px;
+  background:linear-gradient(135deg,var(--accent2),#0891b2);
+  color:#04141a;font-weight:800;font-size:15px;cursor:pointer;
+  box-shadow:0 8px 22px rgba(34,211,238,0.35);
+}
+.cash-btn{
+  padding:16px;border:none;border-radius:14px;
+  background:linear-gradient(135deg,#22c55e,#16a34a);
+  color:#fff;font-weight:800;font-size:15px;cursor:pointer;
+  box-shadow:0 8px 22px rgba(34,197,94,0.35);
+}
+.start-btn:active,.cash-btn:active{transform:scale(0.98)}
+.start-btn:disabled,.cash-btn:disabled{opacity:0.4;cursor:not-allowed}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:#fff;padding:12px 20px;border-radius:14px;font-weight:600;font-size:14px;z-index:200;opacity:0;transition:all 0.25s;pointer-events:none;border:1px solid var(--border)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
+.toast.win{border-color:rgba(34,197,94,0.5)}
+.toast.lose{border-color:rgba(239,68,68,0.5)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html" class="back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></a>
+  <div class="title">💣 Mines</div>
+  <div class="balance"><span id="bal">—</span> so'm</div>
+</div>
+
+<div class="wrap">
+  <div class="stage">
+    <div class="top-info">
+      <div class="ti-box"><div class="ti-label">Multiplier</div><div class="ti-value gold" id="mult">×1.00</div></div>
+      <div class="ti-box"><div class="ti-label">Mumkin yutuq</div><div class="ti-value green" id="potential">0</div></div>
+      <div class="ti-box"><div class="ti-label">Topilgan 💎</div><div class="ti-value" id="found">0</div></div>
+    </div>
+    <div class="grid-mines" id="grid"></div>
+  </div>
+
+  <div class="bet-card">
+    <div class="bet-label">Minalar soni (5×5 = 25 katak)</div>
+    <div class="mines-row">
+      <div class="mine-opt" data-m="3">3 💣</div>
+      <div class="mine-opt active" data-m="5">5 💣</div>
+      <div class="mine-opt" data-m="10">10 💣</div>
+      <div class="mine-opt" data-m="15">15 💣</div>
+    </div>
+
+    <div class="bet-label">Stavka (so'm)</div>
+    <div class="bet-row">
+      <input class="bet-input" id="betInput" type="number" inputmode="numeric" pattern="[0-9]*" min="10" step="1" value="100" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+    </div>
+    <div class="bet-row">
+      <button class="preset" data-v="100">100</button>
+      <button class="preset" data-v="500">500</button>
+      <button class="preset" data-v="1000">1 000</button>
+      <button class="preset" data-v="5000">5 000</button>
+      <button class="preset" data-v="all">MAX</button>
+    </div>
+
+    <div class="btn-row">
+      <button class="start-btn" id="startBtn">▶ Boshlash</button>
+      <button class="cash-btn" id="cashBtn" disabled>💰 Yechib olish</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script type="module">
+import {
+  getCurrentUser, initUser, watchUser, changeBalance, logGame, fmtMoney
+} from '../js/firebase-shared.js?v=2.5.0';
+
+const $ = s => document.querySelector(s);
+function showToast(msg,type=''){
+  const t=$('#toast');t.textContent=msg;t.className='toast '+type;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+const TOTAL_TILES = 25;
+let mineCount = 5;
+let minePositions = new Set();
+let revealed = new Set();
+let balance = 0;
+let bet = 0;
+let active = false;
+const user = getCurrentUser();
+
+function updBal(){ $('#bal').textContent = fmtMoney(balance); }
+
+// Multiplier formulasi: har topilgan olmosda multiplier oshadi.
+// Asosiy formula: mult = product of (safe_remaining_total / safe_remaining_after) * 0.97 (uy chekkasi)
+function computeMultiplier(foundDiamonds, mines){
+  const safeTotal = TOTAL_TILES - mines;
+  let mult = 1;
+  for (let k = 0; k < foundDiamonds; k++){
+    mult *= (TOTAL_TILES - k) / (safeTotal - k);
+  }
+  return mult * 0.97; // uy chekkasi 3%
+}
+
+function buildGrid(){
+  const grid = $('#grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < TOTAL_TILES; i++){
+    const t = document.createElement('div');
+    t.className = 'tile';
+    t.dataset.i = i;
+    t.textContent = '?';
+    t.addEventListener('click', () => onTileClick(i));
+    grid.appendChild(t);
+  }
+}
+
+function onTileClick(i){
+  if (!active) { showToast('Avval o\'yinni boshlang','lose'); return; }
+  if (revealed.has(i)) return;
+  const tile = document.querySelector(`.tile[data-i="${i}"]`);
+  if (minePositions.has(i)){
+    // Mina — yutqazdi
+    tile.classList.add('bomb');
+    tile.textContent = '💣';
+    revealAllMines();
+    endGame(false);
+  } else {
+    tile.classList.add('diamond');
+    tile.textContent = '💎';
+    revealed.add(i);
+    updatePotential();
+  }
+}
+
+function revealAllMines(){
+  minePositions.forEach(i => {
+    const tile = document.querySelector(`.tile[data-i="${i}"]`);
+    if (!tile.classList.contains('bomb')){
+      tile.classList.add('bomb-hidden');
+      tile.textContent = '💣';
+    }
+  });
+  document.querySelectorAll('.tile').forEach(t => t.classList.add('disabled'));
+}
+
+function updatePotential(){
+  const mult = computeMultiplier(revealed.size, mineCount);
+  $('#mult').textContent = '×' + mult.toFixed(2);
+  $('#potential').textContent = fmtMoney(Math.floor(bet * mult));
+  $('#found').textContent = revealed.size;
+}
+
+async function startGame(){
+  if (!user){ showToast('Tizimga kiring!','lose'); return; }
+  if (active) return;
+  const b = Math.floor(parseFloat($('#betInput').value)||0);
+  if (b < 10){ showToast("Minimum 10 so'm",'lose'); return; }
+  if (b > balance){ showToast('Balans yetarli emas!','lose'); return; }
+
+  try { await changeBalance(user.name, -b, { isBet:true }); }
+  catch(e){ showToast('Xato!','lose'); return; }
+
+  bet = b;
+  revealed.clear();
+  minePositions.clear();
+  // Tasodifiy minalar joylashtirish
+  while (minePositions.size < mineCount){
+    minePositions.add(Math.floor(Math.random()*TOTAL_TILES));
+  }
+  buildGrid();
+  active = true;
+  $('#startBtn').disabled = true;
+  $('#cashBtn').disabled = false;
+  document.querySelectorAll('.mine-opt').forEach(o=>o.style.pointerEvents='none');
+  updatePotential();
+  showToast('💎 Olmoslarni toping!','win');
+}
+
+async function cashOut(){
+  if (!active) return;
+  if (revealed.size === 0){ showToast("Avval kamida 1 ta olmos toping",'lose'); return; }
+  const mult = computeMultiplier(revealed.size, mineCount);
+  const winAmount = Math.floor(bet * mult);
+  await changeBalance(user.name, +winAmount, { isWin:true, gameEnd:true });
+  await logGame(user.name, 'mines', bet, winAmount, mult);
+  showToast(`🎉 +${fmtMoney(winAmount - bet)} so'm! (×${mult.toFixed(2)})`, 'win');
+  endGame(true);
+}
+
+function endGame(won){
+  active = false;
+  $('#startBtn').disabled = false;
+  $('#cashBtn').disabled = true;
+  document.querySelectorAll('.mine-opt').forEach(o=>o.style.pointerEvents='auto');
+  document.querySelectorAll('.tile').forEach(t => t.classList.add('disabled'));
+  if (!won){
+    changeBalance(user.name, 0, { gameEnd:true });
+    logGame(user.name, 'mines', bet, 0, 0);
+    showToast(`💥 Bomba! −${fmtMoney(bet)} so'm`, 'lose');
+  }
+}
+
+document.querySelectorAll('.mine-opt').forEach(o=>{
+  o.addEventListener('click', ()=>{
+    if (active) return;
+    document.querySelectorAll('.mine-opt').forEach(x=>x.classList.remove('active'));
+    o.classList.add('active');
+    mineCount = parseInt(o.dataset.m);
+  });
+});
+document.querySelectorAll('.preset').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const v = b.dataset.v;
+    if (v === 'all') $('#betInput').value = Math.max(10, Math.floor(balance));
+    else $('#betInput').value = v;
+  });
+});
+
+$('#startBtn').addEventListener('click', startGame);
+$('#cashBtn').addEventListener('click', cashOut);
+
+buildGrid();
+
+if (!user){
+  showToast('Tizimga kiring!','lose');
+  $('#bal').textContent = '0';
+} else {
+  (async ()=>{
+    try {
+      const res = await initUser(user.name);
+      balance = Number(res.data.balance) || 0;
+      updBal();
+      watchUser(user.name, (data)=>{
+        if (!data) return;
+        balance = Number(data.balance) || 0; updBal();
+      });
+    } catch(e){ console.error(e); showToast('Firebase xato!','lose'); }
+  })();
+}
+</script>
+</body>
+</html>

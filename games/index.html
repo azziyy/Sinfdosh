@@ -134,8 +134,40 @@ body{
   background:radial-gradient(circle at 80% 20%, rgba(0,229,255,0.18), transparent 60%);
   pointer-events:none;
 }
+.game-card.slots{background:linear-gradient(160deg,#3a1810,#5c1a0a)}
+.game-card.slots::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 20% 80%, rgba(255,215,64,0.22), transparent 60%);
+  pointer-events:none;
+}
+.game-card.mines{background:linear-gradient(160deg,#1a2a4a,#0f1a2e)}
+.game-card.mines::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 70% 30%, rgba(239,68,68,0.18), transparent 60%);
+  pointer-events:none;
+}
+.game-card.blackjack{background:linear-gradient(160deg,#0a3a1f,#062a1a)}
+.game-card.blackjack::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 80% 20%, rgba(255,215,64,0.18), transparent 60%);
+  pointer-events:none;
+}
+.game-card.wheel{background:linear-gradient(160deg,#3a2410,#1a0e05)}
+.game-card.wheel::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 30% 30%, rgba(255,152,0,0.22), transparent 60%);
+  pointer-events:none;
+}
+.game-card.rps{background:linear-gradient(160deg,#2a1a4a,#1a0e3a)}
+.game-card.rps::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 60% 40%, rgba(139,92,246,0.20), transparent 60%);
+  pointer-events:none;
+}
 .game-card.soon{opacity:0.7}
 .game-card.soon .gc-tag{background:rgba(239,68,68,0.2);color:#fca5a5}
+.game-card .gc-tag.hot{background:linear-gradient(135deg,#ef4444,#ff9800);color:#fff}
+.game-card .gc-tag.new{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff}
 
 /* LEADERBOARD */
 .leaderboard{margin:0 18px;background:var(--card);border-radius:20px;border:1px solid var(--border);overflow:hidden}
@@ -217,8 +249,48 @@ body{
         <div class="gc-desc">Samolyot uchadi — kerakli vaqtda chiqing!</div>
       </div>
     </a>
+    <a href="slots.html" class="game-card slots">
+      <span class="gc-tag hot">JACKPOT</span>
+      <div>
+        <div class="gc-emoji">🎰</div>
+        <div class="gc-title">Slots</div>
+        <div class="gc-desc">3 reel · jackpot ×50 gacha</div>
+      </div>
+    </a>
+    <a href="mines.html" class="game-card mines">
+      <span class="gc-tag new">YANGI</span>
+      <div>
+        <div class="gc-emoji">💣</div>
+        <div class="gc-title">Mines</div>
+        <div class="gc-desc">Olmoslarni toping, minalardan saqlaning</div>
+      </div>
+    </a>
+    <a href="blackjack.html" class="game-card blackjack">
+      <span class="gc-tag new">YANGI</span>
+      <div>
+        <div class="gc-emoji">🃏</div>
+        <div class="gc-title">Blackjack</div>
+        <div class="gc-desc">21 ochko · klassik karta o'yini</div>
+      </div>
+    </a>
+    <a href="wheel.html" class="game-card wheel">
+      <span class="gc-tag new">YANGI</span>
+      <div>
+        <div class="gc-emoji">🎡</div>
+        <div class="gc-title">G'ildirak</div>
+        <div class="gc-desc">Yutuq g'ildiragi · ×10 gacha</div>
+      </div>
+    </a>
+    <a href="rps.html" class="game-card rps">
+      <span class="gc-tag new">YANGI</span>
+      <div>
+        <div class="gc-emoji">✂️</div>
+        <div class="gc-title">Tosh-Qaychi</div>
+        <div class="gc-desc">Botga qarshi · ×1.95</div>
+      </div>
+    </a>
     <a href="dice.html" class="game-card">
-      <span class="gc-tag">NEW</span>
+      <span class="gc-tag">×5</span>
       <div>
         <div class="gc-emoji">🎲</div>
         <div class="gc-title">Zar</div>
@@ -226,21 +298,13 @@ body{
       </div>
     </a>
     <a href="coinflip.html" class="game-card">
-      <span class="gc-tag">x2</span>
+      <span class="gc-tag">×2</span>
       <div>
         <div class="gc-emoji">🪙</div>
         <div class="gc-title">Tanga</div>
         <div class="gc-desc">Yer / Bosh — 50/50 chiquvchi</div>
       </div>
     </a>
-    <div class="game-card soon">
-      <span class="gc-tag">TEZ ORADA</span>
-      <div>
-        <div class="gc-emoji">🎰</div>
-        <div class="gc-title">Slots</div>
-        <div class="gc-desc">Tez orada qo'shiladi</div>
-      </div>
-    </div>
   </div>
 
   <!-- LEADERBOARD -->
@@ -259,7 +323,7 @@ body{
 import {
   getCurrentUser, initUser, watchUser, watchLeaderboard, fmtMoney,
   DAILY_BONUS, START_BALANCE, claimDailyBonus, getBonusStatus, nextBonusInMs
-} from '../js/firebase-shared.js?v=2.4.0';
+} from '../js/firebase-shared.js?v=2.5.0';
 
 function $(s){return document.querySelector(s)}
 function showToast(msg, type=''){
