@@ -1494,29 +1494,21 @@ img.mm-avatar,
 .qa-2 { background: linear-gradient(135deg, #f59e0b, #d97706); }
 .qa-3 { background: linear-gradient(135deg, #10b981, #059669); }
 .qa-4 { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.qa-games {
-  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+.qa-currency {
+  background: linear-gradient(135deg, #0ea5e9, #0369a1);
   position: relative;
 }
-.qa-games::before {
-  content: '🌟';
+.qa-currency::before {
+  content: '📈';
   position: absolute;
   top: 6px;
   right: 8px;
   font-size: 12px;
-  animation: sparkle 1.6s infinite alternate;
+  animation: sparkle 2s infinite alternate;
 }
 @keyframes sparkle {
   from { opacity: 0.4; transform: scale(0.9); }
   to   { opacity: 1; transform: scale(1.15); }
-}
-.qa-balance {
-  font-size: 9.5px;
-  font-weight: 700;
-  color: #ffd740;
-  letter-spacing: 0.3px;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
-  margin-top: 2px;
 }
 
 /* ============================================================
@@ -1929,3 +1921,40 @@ img.mm-avatar,
   .lightbox-prev { left: 6px; }
   .lightbox-next { right: 6px; }
 }
+
+/* ============================================================
+   VALYUTA KURSI
+   ============================================================ */
+.currency-header { margin-bottom: 16px; }
+.currency-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.currency-icon { font-size: 28px; }
+.currency-title-row h3 { margin: 0; font-size: 20px; font-weight: 800; }
+.currency-sub { font-size: 13px; color: var(--text-secondary); margin: 0; }
+.currency-date { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; }
+.currency-cards { display: flex; flex-direction: column; gap: 10px; }
+.currency-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 16px;
+  gap: 12px;
+}
+.cur-left { display: flex; align-items: center; gap: 12px; }
+.cur-flag { font-size: 26px; line-height: 1; }
+.cur-info { display: flex; flex-direction: column; gap: 2px; }
+.cur-info strong { font-size: 15px; font-weight: 700; letter-spacing: 0.4px; }
+.cur-info span { font-size: 11px; color: var(--text-secondary); }
+.cur-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.cur-rate { font-size: 15px; font-weight: 700; }
+.cur-rate small { font-size: 11px; font-weight: 500; color: var(--text-secondary); }
+.cur-up { font-size: 11px; font-weight: 700; color: #22c55e; }
+.cur-down { font-size: 11px; font-weight: 700; color: #ef4444; }
+.cur-same { font-size: 11px; color: var(--text-secondary); }
