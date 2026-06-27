@@ -151,11 +151,10 @@
             <div class="qa-icon">📸</div>
             <div class="qa-label">Estalik uchun</div>
           </a>
-          <a href="games/index.html" class="qa-btn qa-games">
-            <div class="qa-icon">🎮</div>
-            <div class="qa-label">Oʻyinlar</div>
-            <div class="qa-balance" id="qa-balance-mini">— soʻm</div>
-          </a>
+          <button class="qa-btn qa-currency" data-action="currency">
+            <div class="qa-icon">💱</div>
+            <div class="qa-label">Valyuta kursi</div>
+          </button>
           <button class="qa-btn qa-2" data-action="random">
             <div class="qa-icon">🎲</div>
             <div class="qa-label">Random</div>
@@ -362,24 +361,12 @@
   <div id="toast" class="toast hidden"></div>
 
   <!-- ?v= versiya — kod o'zgarganda APP_VERSION bilan birga oshiring -->
-  <script src="js/config.js?v=2.5.0"></script>
-  <script src="js/data.js?v=2.5.0"></script>
-  <script src="js/app.js?v=2.5.0"></script>
+  <script src="js/config.js?v=2.4.0"></script>
+  <script src="js/data.js?v=2.4.0"></script>
+  <script src="js/app.js?v=2.4.0"></script>
 
-  <!-- Firebase Realtime DB — umumiy balans (o'yinlar uchun) -->
-  <script type="module" src="js/firebase-shared.js?v=2.5.0"></script>
-  <script type="module">
-    // Asosiy sahifada balansni mini-koʻrsatish
-    import { watchUser, getCurrentUser, fmtMoney } from './js/firebase-shared.js?v=2.5.0';
-    window.addEventListener('games:ready', () => {
-      const u = getCurrentUser();
-      if (!u) return;
-      watchUser(u.name, (data) => {
-        const el = document.getElementById('qa-balance-mini');
-        if (el && data) el.textContent = fmtMoney(data.balance) + ' soʻm';
-      });
-    });
-    // showToast ni global qilish (firebase-shared.js dan chaqiriladi)
+  <script>
+    // showToast ni global qilish
     window.showToast = (msg, type='') => {
       const t = document.getElementById('toast');
       if (!t) return;
