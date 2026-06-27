@@ -173,6 +173,16 @@ const App = {
 
   // =============== SPLASH STORIES ===============
   showSplashStories() {
+    // 1 kunda 1 marta ko'rsatish: bugun ko'rsatilgan bo'lsa — to'g'ridan app ochiladi
+    const todayKey = new Date().toISOString().slice(0, 10); // "2026-06-27"
+    const lastShown = localStorage.getItem('story_last_shown');
+    if (lastShown === todayKey) {
+      this.showApp();
+      return;
+    }
+    // Bugun hali ko'rsatilmagan — ko'rsatib, sanani saqlaymiz
+    localStorage.setItem('story_last_shown', todayKey);
+
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('app').classList.add('hidden');
     document.getElementById('splash-stories').classList.remove('hidden');
@@ -440,6 +450,7 @@ const App = {
     if (action === 'random') return this.showRandomMember();
     if (action === 'credit') return this.showCreditCalculator();
     if (action === 'weather') return this.showWeather();
+    if (action === 'currency') return this.showCurrencyRates();
   },
 
   openActionModal(html) {
@@ -646,6 +657,77 @@ const App = {
         </div>
         <div class="w-days">${days}</div>
       </div>`;
+  },
+
+  // =============== VALYUTA KURSI (SQB BANK) ===============
+  async showCurrencyRates() {
+    this.openActionModal(`
+      <div class="currency-header">
+        <div class="currency-title-row">
+          <span class="currency-icon">💱</span>
+          <h3>Valyuta kurslari</h3>
+        </div>
+        <p class="currency-sub">Markaziy bank (CBU) rasmiy kursi</p>
+      </div>
+      <div id="currency-cards" class="currency-cards">
+        <div class="weather-loading">
+          <div class="loader-circle" style="margin:auto"></div>
+          <p>Kurslar yuklanmoqda...</p>
+        </div>
+      </div>
+    `);
+
+    const box = document.getElementById('currency-cards');
+    try {
+      // CBU (O'zbekiston Markaziy banki) ochiq API
+      const res = await fetch('https://cbu.uz/uz/arkhiv-kursov-valyut/json/');
+      if (!res.ok) throw new Error('API xato');
+      const all = await res.json();
+
+      // Kerakli valyutalar
+      const wanted = ['USD', 'EUR', 'RUB', 'GBP', 'CNY', 'KZT', 'KGS', 'TRY'];
+      const filtered = all.filter(v => wanted.includes(v.Ccy));
+
+      const flagMap = {
+        USD: '🇺🇸', EUR: '🇪🇺', RUB: '🇷🇺', GBP: '🇬🇧',
+        CNY: '🇨🇳', KZT: '🇰🇿', KGS: '🇰🇬', TRY: '🇹🇷'
+      };
+      const nameMap = {
+        USD: 'AQSH dollari', EUR: 'Yevro', RUB: 'Rossiya rubli',
+        GBP: 'Britaniya funti', CNY: 'Xitoy yuani',
+        KZT: 'Qozogʻiston tengesi', KGS: 'Qirgʻiziston somi', TRY: 'Turk lirasi'
+      };
+
+      const date = all[0]?.Date || '';
+      const dateStr = date ? `<p class="currency-date">📅 Sana: <b>${date}</b></p>` : '';
+
+      box.innerHTML = dateStr + filtered.map(v => {
+        const rate = parseFloat(v.Rate).toLocaleString('uz-UZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const diff = parseFloat(v.Diff);
+        const diffSign = diff > 0 ? `<span class="cur-up">▲ ${diff.toFixed(2)}</span>` :
+                         diff < 0 ? `<span class="cur-down">▼ ${Math.abs(diff).toFixed(2)}</span>` :
+                         `<span class="cur-same">—</span>`;
+        return `
+          <div class="currency-card">
+            <div class="cur-left">
+              <span class="cur-flag">${flagMap[v.Ccy] || '🏳️'}</span>
+              <div class="cur-info">
+                <strong>${v.Ccy}</strong>
+                <span>${nameMap[v.Ccy] || v.CcyNm_UZ}</span>
+              </div>
+            </div>
+            <div class="cur-right">
+              <span class="cur-rate">${rate} <small>soʻm</small></span>
+              ${diffSign}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+    } catch (e) {
+      console.error('currency error', e);
+      box.innerHTML = `<div class="empty-state"><div class="emoji">❌</div><p>Kurslarni yuklab boʻlmadi. Internet aloqasini tekshiring.</p></div>`;
+    }
   },
 
   // =============== MA'LUMOTLARNI YANGILASH ===============
