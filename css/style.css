@@ -959,6 +959,13 @@ svg { width: 1em; height: 1em; }
 /* ============================================
    FOND
    ============================================ */
+.fond-summary-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.fond-summary-row .fond-total-card { flex: 1; margin-bottom: 0; }
+
 .fond-total-card {
   background: linear-gradient(135deg, #047857, #10b981);
   color: white;
@@ -970,9 +977,20 @@ svg { width: 1em; height: 1em; }
   margin-bottom: 16px;
   box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
 }
+.fond-total-card.expense {
+  background: linear-gradient(135deg, var(--red), var(--orange));
+  box-shadow: 0 10px 30px rgba(239, 68, 68, 0.3);
+}
 .fond-total-label { font-size: 13px; opacity: 0.9; display: block; margin-bottom: 4px; }
 .fond-total-card strong { font-size: 24px; font-weight: 800; }
 .fond-total-icon { font-size: 42px; }
+.fond-total-sub { font-size: 12px; opacity: 0.85; display: block; margin-top: 6px; }
+.fond-total-sub b { font-weight: 700; }
+
+@media (max-width: 380px) {
+  .fond-total-card strong { font-size: 18px; }
+  .fond-total-icon { font-size: 30px; }
+}
 
 .tabs {
   display: flex;
@@ -1024,6 +1042,7 @@ svg { width: 1em; height: 1em; }
 .month-card .m-name { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
 .month-card .m-sum { font-size: 18px; font-weight: 800; margin-top: 6px; color: var(--green); }
 .month-card .m-count { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.month-card .m-expense { font-size: 11px; color: var(--red); margin-top: 4px; font-weight: 600; }
 
 .fond-members {
   display: flex;
