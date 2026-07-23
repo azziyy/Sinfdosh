@@ -91,16 +91,33 @@ const DataService = {
   },
 
   // FOND
+  // A ustun: yil, B ustun: oy, C ustun: aʼzo ismi, D ustun: qoʻshilgan summa,
+  // E ustun: chiqim (agar shu qatorda yozilsa, oʻsha oy/yil uchun chiqim hisoblanadi).
+  // Bitta qatorda C/D (toʻlov) yoki faqat E (chiqim) boʻlishi mumkin — ikkalasi ham
+  // boʻlsa, ikkalasi ham hisobga olinadi.
   async getFond() {
     const { rows } = await this.fetchSheet(CONFIG.SHEETS.fond.gid);
-    return rows
-      .filter(r => r[0] && r[1] && r[2])
-      .map(r => ({
-        year: parseInt(String(r[0]).replace(/\D/g, '')) || new Date().getFullYear(),
-        month: String(r[1] || '').trim(),
-        member: String(r[2] || '').trim(),
-        amount: Number(String(r[3] || '0').replace(/[^\d.-]/g, '')) || 0
-      }));
+    const payments = [];
+    const expenses = [];
+
+    rows.forEach(r => {
+      const year = parseInt(String(r[0] || '').replace(/\D/g, '')) || null;
+      const month = String(r[1] || '').trim();
+      if (!year || !month) return;
+
+      const member = String(r[2] || '').trim();
+      const amount = Number(String(r[3] || '0').replace(/[^\d.-]/g, '')) || 0;
+      if (member && amount) {
+        payments.push({ year, month, member, amount });
+      }
+
+      const expense = Number(String(r[4] || '0').replace(/[^\d.-]/g, '')) || 0;
+      if (expense) {
+        expenses.push({ year, month, amount: expense });
+      }
+    });
+
+    return { payments, expenses };
   },
 
   // TO'YONA — A ustun: a'zo ismi (kimga to'yona qilingan)
@@ -173,14 +190,14 @@ const DataService = {
 
   // Hammasini bir vaqtda olish
   async loadAll() {
-    const [members, osh, fond, toyona, news] = await Promise.all([
+    const [members, osh, fondData, toyona, news] = await Promise.all([
       this.getMembers().catch(e => { console.error('members', e); return []; }),
       this.getOsh().catch(e => { console.error('osh', e); return []; }),
-      this.getFond().catch(e => { console.error('fond', e); return []; }),
+      this.getFond().catch(e => { console.error('fond', e); return { payments: [], expenses: [] }; }),
       this.getToyona().catch(e => { console.error('toyona', e); return []; }),
       this.getNews().catch(e => { console.error('news', e); return []; })
     ]);
-    return { members, osh, fond, toyona, news };
+    return { members, osh, fond: fondData.payments, fondExpenses: fondData.expenses, toyona, news };
   },
 
   // Majburiy yangilash — eski cache ni tozalab, hammasini tarmoqdan qayta yuklaydi.

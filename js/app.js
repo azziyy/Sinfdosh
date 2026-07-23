@@ -3,7 +3,7 @@
    ============================================ */
 
 const App = {
-  data: { members: [], osh: [], fond: [], toyona: [], news: [] },
+  data: { members: [], osh: [], fond: [], fondExpenses: [], toyona: [], news: [] },
   currentUser: null,
   selectedMember: null,
   currentOshYear: new Date().getFullYear(),
@@ -203,13 +203,15 @@ const App = {
       f.year === curYear && monthIndex(f.month) === curMonthIdxS
     );
     const monthTotal = monthFond.reduce((s, f) => s + f.amount, 0);
+    const monthExpenseS = this.fondExpenseSum(curYear, curMonthIdxS);
+    const monthNetS = monthTotal - monthExpenseS;
     stories.push({
       bg: 'bg-2',
       content: `
         <div class="emoji">💰</div>
         <h2>${escapeHTML(curMonth)} oyi fondi</h2>
-        <div class="big-number">${formatMoney(monthTotal)}</div>
-        <p>${monthFond.length} ta aʼzo bu oy uchun toʻlov amalga oshirgan</p>
+        <div class="big-number">${formatMoney(monthNetS)}</div>
+        <p>${monthFond.length} ta aʼzo bu oy uchun toʻlov amalga oshirgan${monthExpenseS > 0 ? ` · chiqim: ${formatMoney(monthExpenseS)}` : ''}</p>
       `
     });
 
@@ -959,10 +961,11 @@ const App = {
     document.getElementById('stat-members').textContent = this.data.members.length;
 
     const curMonthIdxH = monthIndex(curMonth);
-    const monthFond = this.data.fond
+    const monthFondIncome = this.data.fond
       .filter(f => f.year === curYear && monthIndex(f.month) === curMonthIdxH)
       .reduce((s, f) => s + f.amount, 0);
-    document.getElementById('stat-fund').textContent = shortMoney(monthFond);
+    const monthFondExpense = this.fondExpenseSum(curYear, curMonthIdxH);
+    document.getElementById('stat-fund').textContent = shortMoney(monthFondIncome - monthFondExpense);
 
     const oshThis = this.data.osh.find(o =>
       o.year === curYear && monthIndex(o.month) === curMonthIdxH
@@ -1090,12 +1093,26 @@ const App = {
   },
 
   // =============== FOND ===============
+
+  // Berilgan yil (va ixtiyoriy oy) uchun chiqimlar summasi
+  fondExpenseSum(year, monthIdx = null) {
+    return this.data.fondExpenses
+      .filter(e => e.year === year && (monthIdx == null || monthIndex(e.month) === monthIdx))
+      .reduce((s, e) => s + e.amount, 0);
+  },
+
   renderFond() {
     document.getElementById('fond-year').textContent = this.currentFondYear;
 
     const yearFond = this.data.fond.filter(f => f.year === this.currentFondYear);
     const total = yearFond.reduce((s, f) => s + f.amount, 0);
-    document.getElementById('fond-total').textContent = formatMoney(total);
+    const expenseTotal = this.fondExpenseSum(this.currentFondYear);
+    const netTotal = total - expenseTotal;
+    document.getElementById('fond-total').textContent = formatMoney(netTotal);
+    const incomeEl = document.getElementById('fond-income-total');
+    if (incomeEl) incomeEl.textContent = formatMoney(total);
+    const expenseEl = document.getElementById('fond-expense-total');
+    if (expenseEl) expenseEl.textContent = formatMoney(expenseTotal);
 
     // Months horizontal scroll
     const monthsBox = document.getElementById('fond-months');
@@ -1103,12 +1120,15 @@ const App = {
     monthsBox.innerHTML = CONFIG.MONTHS.map((m, i) => {
       const monthData = yearFond.filter(f => monthIndex(f.month) === i);
       const sum = monthData.reduce((s, x) => s + x.amount, 0);
+      const monthExpense = this.fondExpenseSum(this.currentFondYear, i);
+      const netSum = sum - monthExpense;
       const isCurrent = (this.currentFondYear === now.getFullYear() && i === now.getMonth());
       return `
         <div class="month-card ${isCurrent ? 'current' : ''}" data-month="${escapeAttr(m)}">
           <div class="m-name">${m}</div>
-          <div class="m-sum">${shortMoney(sum)}</div>
+          <div class="m-sum">${shortMoney(netSum)}</div>
           <div class="m-count">${monthData.length} kishi</div>
+          ${monthExpense > 0 ? `<div class="m-expense">− ${shortMoney(monthExpense)} chiqim</div>` : ''}
         </div>
       `;
     }).join('');
@@ -1173,6 +1193,8 @@ const App = {
       f.year === this.currentFondYear && monthIndex(f.month) === targetIdx
     );
     const total = yearFond.reduce((s, f) => s + f.amount, 0);
+    const expense = this.fondExpenseSum(this.currentFondYear, targetIdx);
+    const net = total - expense;
 
     const body = document.getElementById('member-modal-body');
     body.innerHTML = `
@@ -1183,9 +1205,19 @@ const App = {
       </div>
       <div class="mm-stat-row">
         <div class="mm-stat">
-          <div class="lbl">Jami</div>
+          <div class="lbl">Yigʻilgan</div>
           <div class="val green">${formatMoney(total)}</div>
         </div>
+        <div class="mm-stat">
+          <div class="lbl">Chiqim</div>
+          <div class="val orange">${formatMoney(expense)}</div>
+        </div>
+        <div class="mm-stat">
+          <div class="lbl">Qoldiq</div>
+          <div class="val">${formatMoney(net)}</div>
+        </div>
+      </div>
+      <div class="mm-stat-row">
         <div class="mm-stat">
           <div class="lbl">Toʻlaganlar</div>
           <div class="val">${yearFond.length} kishi</div>
